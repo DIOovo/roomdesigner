@@ -1,0 +1,37 @@
+export type GenerationStatus = "queued" | "processing" | "completed" | "failed";
+export type GenerationStage = "queued" | "generating_after_frame" | "submitting_video" | "video_submission_in_progress" | "generating_video" | "applying_watermark" | "watermarking" | "completed" | "failed";
+
+export type GenerationJob = {
+  id: string;
+  user_id: string | null;
+  anonymous_id: string | null;
+  request_key: string | null;
+  credit_usage_id: string | null;
+  credit_source: "free" | "subscription" | "credit_pack" | "manual" | null;
+  status: GenerationStatus;
+  stage: GenerationStage;
+  room_type: string;
+  style: string;
+  plan: string;
+  seconds: number;
+  resolution: "480p" | "768p";
+  is_watermarked: boolean;
+  commercial_license: boolean;
+  priority_queue: boolean;
+  first_frame_url: string | null;
+  first_frame_path: string | null;
+  last_frame_url: string | null;
+  last_frame_path: string | null;
+  raw_video_url: string | null;
+  raw_video_path: string | null;
+  watermarked_video_url: string | null;
+  watermarked_video_path: string | null;
+  video_url: string | null;
+  provider: string | null;
+  provider_task_id: string | null;
+  error: string | null;
+  started_at: string | null;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+};

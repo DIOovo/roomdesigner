@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title description">
+  <title id="title">Roomorphic AI Room Design</title>
+  <description id="description">Before and after room transformation video</description>
+  <rect width="1200" height="630" fill="#f4f6f5"/>
+  <rect x="54" y="54" width="1092" height="522" rx="34" fill="#fbfcfb" stroke="#d3d9d5" stroke-width="2"/>
+  <text x="96" y="132" fill="#176b4d" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="700">Roomorphic.</text>
+  <text x="96" y="257" fill="#15201b" font-family="Arial, Helvetica, sans-serif" font-size="76" font-weight="800" letter-spacing="-3">AI Room Design</text>
+  <text x="96" y="348" fill="#59645f" font-family="Arial, Helvetica, sans-serif" font-size="62" font-weight="700" letter-spacing="-2">Before  →  After Video</text>
+  <rect x="96" y="421" width="326" height="74" rx="18" fill="#176b4d"/>
+  <text x="135" y="470" fill="#f7fbf8" font-family="Arial, Helvetica, sans-serif" font-size="29" font-weight="700">Photo in. Video out.</text>
+  <rect x="865" y="123" width="196" height="332" rx="28" fill="#e8ecea"/>
+  <path d="M910 365V222l107 71-107 72Z" fill="#176b4d"/>
+</svg>
