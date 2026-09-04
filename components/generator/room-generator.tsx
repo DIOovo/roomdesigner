@@ -35,6 +35,7 @@ export function RoomGenerator() {
   const requestInFlight = useRef(false);
   const pollController = useRef<AbortController | null>(null);
   const reservedSource = useRef<CreditSource | null>(null);
+  const selectedStyleLabel = styles.find((item) => item.name === style)?.labelZh ?? style;
 
   useEffect(() => {
     fetch("/api/entitlements", { cache: "no-store" }).then((response) => response.json()).then((data: UserEntitlements) => setEntitlements(data)).catch(() => undefined);
@@ -194,7 +195,7 @@ export function RoomGenerator() {
           </label>
           <div>
             <p className="mb-1.5 text-xs font-bold text-[var(--muted)]">Choose a style</p>
-            <p className="text-sm font-bold">{style}</p>
+            <p className="text-sm font-bold">{selectedStyleLabel}</p>
           </div>
         </div>
         <div className="mt-3 grid min-w-0 max-w-full flex-1 auto-cols-[76px] grid-flow-col grid-rows-1 gap-2 overflow-x-auto pb-1 sm:grid-flow-row sm:grid-cols-5 sm:grid-rows-none sm:overflow-visible sm:pb-0">
@@ -203,12 +204,13 @@ export function RoomGenerator() {
               type="button"
               key={item.name}
               onClick={() => { setStyle(item.name); track("style_selected", { style: item.name }); }}
-              className={`focus-ring group relative min-h-[62px] overflow-hidden rounded-xl border-2 text-left transition-transform active:scale-[.97] ${style === item.name ? "border-[var(--accent)]" : "border-transparent"}`}
+              className={`focus-ring group relative min-h-[62px] overflow-hidden rounded-xl border-2 text-left transition-[transform,border-color,box-shadow] active:scale-[.97] ${style === item.name ? "border-[var(--accent)] ring-2 ring-[var(--accent)] ring-offset-1 ring-offset-[var(--surface)]" : "border-transparent hover:border-[var(--line)]"}`}
               aria-pressed={style === item.name}
             >
-              <Image src={item.image} alt={`${item.name} interior design style`} fill className="object-cover transition-transform duration-300 group-hover:scale-105" sizes="110px" />
-              <span className="absolute inset-x-0 bottom-0 bg-[rgba(10,18,14,.72)] px-1.5 py-1 text-[9px] font-bold leading-tight text-white">{item.name}</span>
-              {style === item.name ? <span className="absolute right-1.5 top-1.5 grid size-5 place-items-center rounded-full bg-[var(--accent)] text-[var(--on-accent)]"><Check size={12} weight="bold" /></span> : null}
+              <Image src={item.image} alt={item.alt} fill className="object-cover transition-transform duration-300 group-hover:scale-105" sizes="(max-width: 639px) 76px, 110px" />
+              <span aria-hidden="true" className={`absolute inset-0 transition-colors ${style === item.name ? "bg-[rgba(21,110,66,.12)]" : "bg-transparent"}`} />
+              <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[rgba(8,14,11,.92)] via-[rgba(8,14,11,.68)] to-transparent px-1.5 pb-1 pt-3 text-[9px] font-extrabold leading-tight text-white">{item.labelZh}</span>
+              {style === item.name ? <span className="absolute right-1.5 top-1.5 grid size-5 place-items-center rounded-full bg-[var(--accent)] text-[var(--on-accent)] shadow-[0_2px_8px_rgba(0,0,0,.28)]"><Check size={12} weight="bold" /></span> : null}
             </button>
           ))}
         </div>
