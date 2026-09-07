@@ -49,7 +49,7 @@ test("public product branding uses RoomFacelift", async () => {
 
 test("sitemap includes public routes and excludes private routes", async () => {
   const source = await read("app/sitemap.ts");
-  for (const route of ["/about", "/contact", "/privacy", "/terms", "/refund", "/pricing", "/blog"]) assert.match(source, new RegExp(route.replace("/", "\\/")));
+  for (const route of ["/about", "/contact", "/privacy", "/terms", "/refund", "/acceptable-use", "/pricing", "/blog"]) assert.match(source, new RegExp(route.replace("/", "\\/")));
   for (const route of ["/login", "/signup", "/account", "/result", "/api"]) assert.doesNotMatch(source, new RegExp(route.replace("/", "\\/")));
 });
 
@@ -138,4 +138,31 @@ test("the standalone pricing CTA links to the existing homepage generator", asyn
   assert.match(homepage, /<section id="generator"/);
   assert.match(pricing, /href="\/#generator"/);
   assert.doesNotMatch(pricing, /href="\/#pricing"/);
+});
+
+test("acceptable use policy covers AI safety boundaries without fake moderation claims", async () => {
+  const [acceptableUse, terms, footer, sitemap, site] = await Promise.all([
+    "app/acceptable-use/page.tsx",
+    "app/terms/page.tsx",
+    "components/site-footer.tsx",
+    "app/sitemap.ts",
+    "lib/site.ts",
+  ].map(read));
+  assert.match(acceptableUse, /title: "Acceptable Use Policy \| RoomFacelift"/);
+  assert.match(acceptableUse, /path: "\/acceptable-use"/);
+  for (const section of ["Introduction", "Permitted Use", "Prohibited Content and Activities", "Image and Content Rights", "AI Safety and Abuse", "Circumvention and Automated Abuse", "Enforcement", "Changes to This Policy", "Contact"]) assert.match(acceptableUse, new RegExp(section));
+  assert.match(acceptableUse, /sexually explicit content/);
+  assert.match(acceptableUse, /Illegal, exploitative, hateful, abusive/);
+  assert.match(acceptableUse, /necessary permission to use/);
+  assert.match(acceptableUse, /bypass usage limits, credit restrictions, security controls/);
+  assert.match(acceptableUse, /href="\/terms"/);
+  assert.match(acceptableUse, /href="\/privacy"/);
+  assert.match(acceptableUse, /siteConfig\.supportEmail/);
+  assert.match(site, /support@roomfacelift\.com/);
+  assert.match(terms, /Acceptable use and AI safety/);
+  assert.match(terms, /illegal, sexually explicit, harmful, abusive, deceptive/);
+  assert.match(terms, /href="\/acceptable-use"/);
+  assert.match(footer, /href="\/acceptable-use"/);
+  assert.match(sitemap, /"\/acceptable-use"/);
+  assert.doesNotMatch(`${acceptableUse}\n${terms}`, /all user content is moderated|every prompt is reviewed|Creem Moderation API|guarantee no prohibited content/i);
 });
