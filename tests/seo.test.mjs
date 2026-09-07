@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { access, readFile } from "node:fs/promises";
 import test from "node:test";
-import { buildStructuredData, faqs, howToSteps, PRODUCTION_SITE_URL, resolveSiteUrl, siteConfig } from "../lib/site.ts";
+import { buildStructuredData, faqs, howToSteps, PRODUCTION_SITE_URL, resolveSiteUrl, siteConfig, styles } from "../lib/site.ts";
 import { hasAnalyticsConsent } from "../lib/analytics/consent.ts";
 import { sanitizeAnalyticsProperties } from "../lib/analytics/events.ts";
 
@@ -107,4 +107,35 @@ test("public review copy names Creem and does not advertise planned Pro features
   assert.doesNotMatch(privacy, /Stripe/);
   assert.match(refund, /authorized payment provider or Merchant of Record/);
   assert.doesNotMatch([homepage, pricing, checkoutButton].join("\n"), /Batch generation|planned for later|coming later|coming soon/i);
+});
+
+test("the English generator uses all 15 stable style values as its visible labels", async () => {
+  const expectedNames = [
+    "Modern", "Scandinavian", "Japandi", "Mid-century Modern", "Industrial",
+    "Bohemian", "Luxury", "French Country", "Minimalist", "Art Deco",
+    "Coastal", "Farmhouse", "Mediterranean", "Contemporary", "Traditional",
+  ];
+  const expectedImages = [
+    "/styles/modern.jpg", "/styles/scandinavian.jpg", "/styles/japandi.jpg", "/styles/mid-century-modern.jpg", "/styles/industrial.jpg",
+    "/styles/bohemian.jpg", "/styles/luxury.jpg", "/styles/french-country.jpg", "/styles/minimalist.jpg", "/styles/art-deco.jpg",
+    "/styles/coastal.jpg", "/styles/farmhouse.jpg", "/styles/mediterranean.jpg", "/styles/contemporary.jpg", "/styles/traditional.jpg",
+  ];
+  const generator = await read("components/generator/room-generator.tsx");
+  const styleSource = await read("lib/site.ts");
+  const chineseLabels = /现代风|斯堪的纳维亚|中世纪现代|工业风|波西米亚|奢华|法式乡村|极简主义|装饰艺术|海岸风|农舍风|地中海|当代风|传统风/;
+  assert.equal(styles.length, 15);
+  assert.deepEqual(styles.map((style) => style.name), expectedNames);
+  assert.deepEqual(styles.map((style) => style.image), expectedImages);
+  assert.doesNotMatch(`${styleSource}\n${generator}`, chineseLabels);
+  assert.match(generator, /setStyle\(item\.name\)/);
+  assert.match(generator, />\{item\.name\}<\/span>/);
+  const styleFaq = faqs.find((faq) => faq.question === "What interior styles are supported?");
+  for (const name of expectedNames) assert.match(styleFaq?.answer ?? "", new RegExp(name));
+});
+
+test("the standalone pricing CTA links to the existing homepage generator", async () => {
+  const [pricing, homepage] = await Promise.all([read("app/pricing/page.tsx"), read("app/page.tsx")]);
+  assert.match(homepage, /<section id="generator"/);
+  assert.match(pricing, /href="\/#generator"/);
+  assert.doesNotMatch(pricing, /href="\/#pricing"/);
 });

@@ -41,21 +41,21 @@ export const roomTypes = [
 ] as const;
 
 export const styles = [
-  { name: "Modern", labelZh: "现代风", image: "/styles/modern.jpg", alt: "Modern open-plan living room interior style preview" },
-  { name: "Scandinavian", labelZh: "斯堪的纳维亚", image: "/styles/scandinavian.jpg", alt: "Scandinavian sunlit living room interior style preview" },
-  { name: "Japandi", labelZh: "Japandi", image: "/styles/japandi.jpg", alt: "Japandi living room interior style preview" },
-  { name: "Mid-century Modern", labelZh: "中世纪现代", image: "/styles/mid-century-modern.jpg", alt: "Mid-century modern living room interior style preview" },
-  { name: "Industrial", labelZh: "工业风", image: "/styles/industrial.jpg", alt: "Industrial loft living room interior style preview" },
-  { name: "Bohemian", labelZh: "波西米亚", image: "/styles/bohemian.jpg", alt: "Bohemian living room interior style preview" },
-  { name: "Luxury", labelZh: "奢华", image: "/styles/luxury.jpg", alt: "Luxury marble living room interior style preview" },
-  { name: "French Country", labelZh: "法式乡村", image: "/styles/french-country.jpg", alt: "French country dining room interior style preview" },
-  { name: "Minimalist", labelZh: "极简主义", image: "/styles/minimalist.jpg", alt: "Minimalist living room interior style preview" },
-  { name: "Art Deco", labelZh: "装饰艺术", image: "/styles/art-deco.jpg", alt: "Art Deco salon interior style preview" },
-  { name: "Coastal", labelZh: "海岸风", image: "/styles/coastal.jpg", alt: "Coastal living room interior style preview" },
-  { name: "Farmhouse", labelZh: "农舍风", image: "/styles/farmhouse.jpg", alt: "Farmhouse kitchen interior style preview" },
-  { name: "Mediterranean", labelZh: "地中海", image: "/styles/mediterranean.jpg", alt: "Mediterranean arched living room interior style preview" },
-  { name: "Contemporary", labelZh: "当代风", image: "/styles/contemporary.jpg", alt: "Contemporary living room interior style preview" },
-  { name: "Traditional", labelZh: "传统风", image: "/styles/traditional.jpg", alt: "Traditional formal living room interior style preview" },
+  { name: "Modern", image: "/styles/modern.jpg", alt: "Modern open-plan living room interior style preview" },
+  { name: "Scandinavian", image: "/styles/scandinavian.jpg", alt: "Scandinavian sunlit living room interior style preview" },
+  { name: "Japandi", image: "/styles/japandi.jpg", alt: "Japandi living room interior style preview" },
+  { name: "Mid-century Modern", image: "/styles/mid-century-modern.jpg", alt: "Mid-century modern living room interior style preview" },
+  { name: "Industrial", image: "/styles/industrial.jpg", alt: "Industrial loft living room interior style preview" },
+  { name: "Bohemian", image: "/styles/bohemian.jpg", alt: "Bohemian living room interior style preview" },
+  { name: "Luxury", image: "/styles/luxury.jpg", alt: "Luxury marble living room interior style preview" },
+  { name: "French Country", image: "/styles/french-country.jpg", alt: "French country dining room interior style preview" },
+  { name: "Minimalist", image: "/styles/minimalist.jpg", alt: "Minimalist living room interior style preview" },
+  { name: "Art Deco", image: "/styles/art-deco.jpg", alt: "Art Deco salon interior style preview" },
+  { name: "Coastal", image: "/styles/coastal.jpg", alt: "Coastal living room interior style preview" },
+  { name: "Farmhouse", image: "/styles/farmhouse.jpg", alt: "Farmhouse kitchen interior style preview" },
+  { name: "Mediterranean", image: "/styles/mediterranean.jpg", alt: "Mediterranean arched living room interior style preview" },
+  { name: "Contemporary", image: "/styles/contemporary.jpg", alt: "Contemporary living room interior style preview" },
+  { name: "Traditional", image: "/styles/traditional.jpg", alt: "Traditional formal living room interior style preview" },
 ] as const;
 
 export const samples = [

@@ -40,7 +40,7 @@ export function RoomGenerator({ reuseId }: { reuseId?: string }) {
   const requestInFlight = useRef(false);
   const pollController = useRef<AbortController | null>(null);
   const reservedSource = useRef<CreditSource | null>(null);
-  const selectedStyleLabel = styles.find((item) => item.name === style)?.labelZh ?? style;
+  const selectedStyleLabel = styles.find((item) => item.name === style)?.name ?? style;
 
   useEffect(() => {
     fetch("/api/entitlements", { cache: "no-store" }).then((response) => response.json()).then((data: UserEntitlements) => setEntitlements(data)).catch(() => undefined);
@@ -272,7 +272,7 @@ export function RoomGenerator({ reuseId }: { reuseId?: string }) {
             >
               <Image src={item.image} alt={item.alt} fill className="object-cover transition-transform duration-300 group-hover:scale-105" sizes="(max-width: 639px) 76px, 110px" />
               <span aria-hidden="true" className={`absolute inset-0 transition-colors ${style === item.name ? "bg-[rgba(21,110,66,.12)]" : "bg-transparent"}`} />
-              <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[rgba(8,14,11,.92)] via-[rgba(8,14,11,.68)] to-transparent px-1.5 pb-1 pt-3 text-[9px] font-extrabold leading-tight text-white">{item.labelZh}</span>
+              <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[rgba(8,14,11,.92)] via-[rgba(8,14,11,.68)] to-transparent px-1.5 pb-1 pt-3 text-[9px] font-extrabold leading-tight text-white">{item.name}</span>
               {style === item.name ? <span className="absolute right-1.5 top-1.5 grid size-5 place-items-center rounded-full bg-[var(--accent)] text-[var(--on-accent)] shadow-[0_2px_8px_rgba(0,0,0,.28)]"><Check size={12} weight="bold" /></span> : null}
             </button>
           ))}
