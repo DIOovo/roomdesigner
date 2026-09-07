@@ -1,13 +1,13 @@
 import "server-only";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import type { CreditReservation, CreditSource, RoomorphicPlan } from "@/lib/entitlements/types";
+import type { CreditReservation, CreditSource, RoomFaceliftPlan } from "@/lib/entitlements/types";
 
 type ReservationRow = {
   success: boolean;
   error_code: CreditReservation["errorCode"];
   usage_id: string | null;
   credit_source: CreditSource | null;
-  plan: RoomorphicPlan | null;
+  plan: RoomFaceliftPlan | null;
   resolution: "480p" | "768p" | null;
   is_watermarked: boolean | null;
   commercial_license: boolean | null;

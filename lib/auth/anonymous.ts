@@ -3,7 +3,7 @@ import { createSignedToken, readSignedToken } from "@/lib/security/signed-token"
 
 type AnonymousClaims = { id: string; createdAt: number };
 
-export const ANONYMOUS_COOKIE = "roomorphic_anon";
+export const ANONYMOUS_COOKIE = "roomfacelift_anon";
 
 export function createAnonymousIdentity() {
   const claims: AnonymousClaims = { id: crypto.randomUUID(), createdAt: Date.now() };

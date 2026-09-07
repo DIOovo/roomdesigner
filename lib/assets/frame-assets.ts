@@ -33,7 +33,7 @@ export async function ensureFrameAccessibleToFal(url: string) {
   const parsed = new URL(url);
   if (!isLocalHost(parsed.hostname)) return url;
   const asset = await downloadRemoteAsset({ url, label: "Local frame", allowedContentTypes: ["image/jpeg", "image/png"], maxBytes: 10 * 1024 * 1024, timeoutMs: 20_000 });
-  const file = new File([asset.bytes], `roomorphic-frame.${asset.contentType === "image/png" ? "png" : "jpg"}`, { type: asset.contentType });
+  const file = new File([asset.bytes], `roomfacelift-frame.${asset.contentType === "image/png" ? "png" : "jpg"}`, { type: asset.contentType });
   return fal.storage.upload(file);
 }
 

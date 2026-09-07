@@ -12,11 +12,11 @@ export async function POST() {
   const store = await cookies();
   const identity = readAnonymousIdentity(store.get(ANONYMOUS_COOKIE)?.value);
   if (!identity) return NextResponse.json({ claimed: false });
-  const claimed = await claimAnonymousUsage({ userId: user.id, anonymousId: anonymousStorageId(identity), cookieUsed: readAnonymousUsage(store.get("roomorphic_free")?.value) });
+  const claimed = await claimAnonymousUsage({ userId: user.id, anonymousId: anonymousStorageId(identity), cookieUsed: readAnonymousUsage(store.get("roomfacelift_free")?.value) });
   const response = NextResponse.json({ claimed });
   if (claimed) {
     response.cookies.set(ANONYMOUS_COOKIE, "", cookieOptions());
-    response.cookies.set("roomorphic_free", "", cookieOptions());
+    response.cookies.set("roomfacelift_free", "", cookieOptions());
   }
   return response;
 }

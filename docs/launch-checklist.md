@@ -1,4 +1,4 @@
-# Roomorphic launch checklist
+# RoomFacelift launch checklist
 
 ## Infrastructure
 

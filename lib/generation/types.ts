@@ -1,5 +1,7 @@
+import type { DesignScope } from "./design-scope";
+
 export type GenerationStatus = "queued" | "processing" | "completed" | "failed";
-export type GenerationStage = "queued" | "generating_after_frame" | "submitting_video" | "video_submission_in_progress" | "generating_video" | "applying_watermark" | "watermarking" | "completed" | "failed";
+export type GenerationStage = "queued" | "generating_after_frame" | "submitting_video" | "video_submission_in_progress" | "generating_video" | "persisting_video" | "applying_watermark" | "watermarking" | "completed" | "failed";
 
 export type GenerationJob = {
   id: string;
@@ -12,6 +14,7 @@ export type GenerationJob = {
   stage: GenerationStage;
   room_type: string;
   style: string;
+  design_scope: DesignScope | null;
   plan: string;
   seconds: number;
   resolution: "480p" | "768p";

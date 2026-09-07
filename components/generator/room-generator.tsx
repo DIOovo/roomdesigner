@@ -7,6 +7,7 @@ import { ArrowRight, Check, FilmStrip, ImageSquare, UploadSimple, WarningCircle 
 import { roomTypes, samples, styles } from "@/lib/site";
 import { track } from "@/lib/analytics/events";
 import type { CreditSource, UserEntitlements } from "@/lib/entitlements/types";
+import { isDesignScope, type DesignScope } from "@/lib/generation/design-scope";
 
 type Status = "idle" | "queued" | "processing" | "error" | "auth" | "upgrade";
 
@@ -22,15 +23,19 @@ type JobResponse = {
   creditSource?: CreditSource;
 };
 
-export function RoomGenerator() {
+type ReuseResponse = { roomType?: string; style?: string; designScope?: string; error?: string };
+
+export function RoomGenerator({ reuseId }: { reuseId?: string }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string>(samples[0].src);
   const [room, setRoom] = useState<(typeof roomTypes)[number]>("Living Room");
   const [style, setStyle] = useState("Japandi");
+  const [designScope, setDesignScope] = useState<DesignScope>("keep-layout");
   const [status, setStatus] = useState<Status>("idle");
   const [stage, setStage] = useState("idle");
   const [message, setMessage] = useState("");
+  const [reuseMessage, setReuseMessage] = useState("");
   const [entitlements, setEntitlements] = useState<UserEntitlements | null>(null);
   const requestInFlight = useRef(false);
   const pollController = useRef<AbortController | null>(null);
@@ -41,6 +46,29 @@ export function RoomGenerator() {
     fetch("/api/entitlements", { cache: "no-store" }).then((response) => response.json()).then((data: UserEntitlements) => setEntitlements(data)).catch(() => undefined);
     return () => pollController.current?.abort();
   }, []);
+
+  useEffect(() => {
+    if (!reuseId) return;
+    const controller = new AbortController();
+    setReuseMessage("Restoring your previous settings...");
+    fetch(`/api/generations/${encodeURIComponent(reuseId)}/reuse`, { cache: "no-store", signal: controller.signal })
+      .then(async (response) => {
+        const data = (await response.json()) as ReuseResponse;
+        if (!response.ok) throw new Error(data.error ?? "Previous settings could not be restored.");
+        if (!data.roomType || !roomTypes.includes(data.roomType as (typeof roomTypes)[number]) || !data.style || !styles.some((item) => item.name === data.style) || !isDesignScope(data.designScope)) {
+          throw new Error("Previous settings are no longer available.");
+        }
+        setRoom(data.roomType as (typeof roomTypes)[number]);
+        setStyle(data.style);
+        setDesignScope(data.designScope);
+        setReuseMessage("Previous room type, style, and design scope restored. Choose a photo, then Generate to create a new version.");
+      })
+      .catch((error) => {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        setReuseMessage(error instanceof Error ? error.message : "Previous settings could not be restored.");
+      });
+    return () => controller.abort();
+  }, [reuseId]);
 
   const validateFile = useCallback((next: File) => {
     if (!['image/jpeg', 'image/png'].includes(next.type)) {
@@ -60,6 +88,15 @@ export function RoomGenerator() {
     track("upload_completed", { sizeBucket: next.size > 5 * 1024 * 1024 ? "5-10mb" : "under-5mb", type: next.type });
     return true;
   }, []);
+
+  function handlePrimaryAction() {
+    if (entitlements && !entitlements.authenticated && entitlements.totalCreditsRemaining <= 0) {
+      track("login_required", { source: "generator" });
+      window.location.assign("/login?next=%2F%23generator");
+      return;
+    }
+    generate();
+  }
 
   async function generate() {
     if (requestInFlight.current) return;
@@ -89,6 +126,7 @@ export function RoomGenerator() {
       body.append("sample", file ? "" : preview);
       body.append("roomType", room);
       body.append("style", style);
+      body.append("designScope", designScope);
       body.append("clientRequestId", crypto.randomUUID());
       const response = await fetch("/api/generate", { method: "POST", body, signal: controller.signal });
       const data = (await response.json()) as JobResponse;
@@ -198,6 +236,31 @@ export function RoomGenerator() {
             <p className="text-sm font-bold">{selectedStyleLabel}</p>
           </div>
         </div>
+        <div className="mt-4">
+          <p className="mb-1.5 text-xs font-bold text-[var(--muted)]">Design scope</p>
+          <div className="grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label="Design scope">
+            <button
+              type="button"
+              role="radio"
+              aria-checked={designScope === "keep-layout"}
+              onClick={() => setDesignScope("keep-layout")}
+              className={`focus-ring rounded-xl border-2 p-3 text-left transition-[border-color,background-color] ${designScope === "keep-layout" ? "border-[var(--accent)] bg-[var(--surface-2)]" : "border-[var(--line)] hover:border-[var(--muted)]"}`}
+            >
+              <span className="flex items-center justify-between gap-2"><span className="text-sm font-black">Keep layout</span><span className="whitespace-nowrap rounded-full bg-[var(--accent)]/12 px-2 py-0.5 text-[10px] font-black text-[var(--accent)]">Recommended</span></span>
+              <span className="mt-1 block text-xs leading-5 text-[var(--muted)]">Preserve windows, doors, walls, and major fixed elements.</span>
+            </button>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={designScope === "reimagine-space"}
+              onClick={() => setDesignScope("reimagine-space")}
+              className={`focus-ring rounded-xl border-2 p-3 text-left transition-[border-color,background-color] ${designScope === "reimagine-space" ? "border-[var(--accent)] bg-[var(--surface-2)]" : "border-[var(--line)] hover:border-[var(--muted)]"}`}
+            >
+              <span className="flex items-center justify-between gap-2"><span className="text-sm font-black">Reimagine space</span><span className="whitespace-nowrap rounded-full bg-[var(--surface-2)] px-2 py-0.5 text-[10px] font-black text-[var(--muted)]">For inspiration</span></span>
+              <span className="mt-1 block text-xs leading-5 text-[var(--muted)]">Allow larger design changes for concept exploration.</span>
+            </button>
+          </div>
+        </div>
         <div className="mt-3 grid min-w-0 max-w-full flex-1 auto-cols-[76px] grid-flow-col grid-rows-1 gap-2 overflow-x-auto pb-1 sm:grid-flow-row sm:grid-cols-5 sm:grid-rows-none sm:overflow-visible sm:pb-0">
           {styles.map((item) => (
             <button
@@ -214,7 +277,8 @@ export function RoomGenerator() {
             </button>
           ))}
         </div>
-        <button type="button" onClick={generate} disabled={status === "queued" || status === "processing"} className="focus-ring mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[var(--accent)] px-5 text-base font-black text-[var(--on-accent)] transition-transform enabled:active:scale-[.99] disabled:cursor-wait disabled:opacity-70">
+        {reuseMessage ? <p className="mt-3 rounded-xl border border-[var(--line)] bg-[var(--surface-2)] px-3 py-2 text-xs font-semibold leading-5 text-[var(--muted)]" role="status">{reuseMessage}</p> : null}
+        <button type="button" onClick={handlePrimaryAction} disabled={status === "queued" || status === "processing"} className="focus-ring mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[var(--accent)] px-5 text-base font-black text-[var(--on-accent)] transition-transform enabled:active:scale-[.99] disabled:cursor-wait disabled:opacity-70">
           {status === "queued" || status === "processing" ? <><FilmStrip size={20} weight="fill" /> Generating video...</> : <>{generateLabel(entitlements)} <ArrowRight size={20} weight="bold" /></>}
         </button>
         {entitlements ? <p className="mt-2 text-center text-xs font-bold text-[var(--muted)]">{creditLabel(entitlements)}</p> : null}
@@ -255,7 +319,7 @@ function GenerationSteps({ stage }: { stage: string }) {
     { key: "generating_video", label: "Transforming" },
     { key: "applying_watermark", label: "Finishing" },
   ];
-  const order: Record<string, number> = { queued: 0, generating_after_frame: 1, submitting_video: 2, video_submission_in_progress: 2, generating_video: 2, applying_watermark: 3, watermarking: 3, completed: 4 };
+  const order: Record<string, number> = { queued: 0, generating_after_frame: 1, submitting_video: 2, video_submission_in_progress: 2, generating_video: 2, persisting_video: 3, applying_watermark: 3, watermarking: 3, completed: 4 };
   const active = order[stage] ?? 0;
   return <ol className="mt-3 grid grid-cols-4 gap-1" aria-label="Generation progress">{stages.map((item, index) => <li key={item.key} className={`border-t-2 pt-1.5 text-[10px] font-bold ${index <= active ? "border-[var(--accent)] text-[var(--ink)]" : "border-[var(--line)] text-[var(--muted)]"}`}>{index < active ? <Check size={12} weight="bold" className="mb-1 text-[var(--accent)]" /> : null}{item.label}</li>)}</ol>;
 }

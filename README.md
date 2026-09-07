@@ -1,6 +1,6 @@
-# Roomorphic
+# RoomFacelift
 
-Roomorphic is an AI room design tool that turns one room photo into a smooth before and after transformation video.
+RoomFacelift is an AI room design tool that turns one room photo into a smooth before and after transformation video.
 
 Production domain: `https://roomorphic.com`
 
@@ -40,7 +40,7 @@ WATERMARK_SERVICE_TOKEN=...
 ANON_COOKIE_SECRET=...
 ```
 
-This is the first real verification path. Roomorphic persists the uploaded Before frame, uses an included After frame, submits both frames to the fal H3 Max queue, and produces a 5-second 480P transformation video.
+This is the first real verification path. RoomFacelift persists the uploaded Before frame, uses an included After frame, submits both frames to the fal H3 Max queue, and produces a 5-second 480P transformation video.
 
 ### Full AI Pipeline
 
@@ -56,6 +56,15 @@ The remote After Image API receives `firstFrame`, `roomType`, `style`, and a geo
 
 Real free exports also require `WATERMARK_SERVICE_URL` and `WATERMARK_SERVICE_TOKEN`. The pipeline refuses to expose the raw fal video when baked watermarking is not configured.
 
+For local watermark integration, start the sibling `roomfacelift-watermark` service and configure:
+
+```env
+WATERMARK_SERVICE_URL=http://localhost:3001/watermark
+WATERMARK_SERVICE_TOKEN=<same token used by the watermark service>
+```
+
+The main app sends `{ videoUrl, text: "Made with RoomFacelift", position: "bottom-right" }` with bearer authentication, downloads the returned temporary MP4, and persists it to private Supabase Storage. The free real-generation path remains fail-closed when either watermark variable is missing.
+
 ## Production integrations
 
 1. Create a Supabase project, run migrations `001` through `004` in filename order, then configure the URL, anon key, and service role key. Both `generation-inputs` and `generation-results` are private; only server-issued signed URLs provide temporary access.
@@ -65,7 +74,7 @@ Real free exports also require `WATERMARK_SERVICE_URL` and `WATERMARK_SERVICE_TO
 5. Configure a server-side watermark service before allowing free production exports. The real-provider path refuses unwatermarked free downloads.
 6. Add GA4, Meta Pixel, and AdSense IDs only after consent and privacy configuration are finalized.
 
-Real-provider requests validate their server configuration before creating a billable job. Free real jobs fail closed when baked watermarking is unavailable. Provider assets are downloaded with timeouts, MIME validation, and hard byte limits before being persisted to private Roomorphic storage.
+Real-provider requests validate their server configuration before creating a billable job. Free real jobs fail closed when baked watermarking is unavailable. Provider assets are downloaded with timeouts, MIME validation, and hard byte limits before being persisted to private RoomFacelift storage.
 
 ## Cloudflare
 

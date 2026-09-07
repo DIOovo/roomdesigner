@@ -29,7 +29,7 @@ declare global {
 
 export function track(event: AnalyticsEvent, properties: Record<string, unknown> = {}) {
   if (typeof window === "undefined") return;
-  if (window.localStorage.getItem("roomorphic_consent_v1") !== "accepted") return;
+  if (window.localStorage.getItem("roomfacelift_consent_v1") !== "accepted") return;
   const safeProperties = sanitizeAnalyticsProperties(properties);
   window.gtag?.("event", event, safeProperties);
   window.fbq?.("trackCustom", event, safeProperties);

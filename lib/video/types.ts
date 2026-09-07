@@ -15,7 +15,7 @@ export type GenerateVideoResult = {
 };
 
 export type VideoQueueStatus =
-  | { status: "queued" | "processing" }
+  | { status: "queued" | "processing" | "retryable"; error?: string }
   | { status: "completed"; result: GenerateVideoResult }
   | { status: "failed"; error: string };
 

@@ -1,4 +1,4 @@
-import type { CreditSource, RoomorphicPlan, UserEntitlements } from "./types";
+import type { CreditSource, RoomFaceliftPlan, UserEntitlements } from "./types";
 
 export type GrantBalance = { source: CreditSource; credits_remaining: number; expires_at: string | null };
 export type SubscriptionState = { plan: "starter" | "pro"; status: string; current_period_end: string | null };
@@ -29,7 +29,7 @@ export function calculateEntitlements(input: {
   const active = (input.subscriptions ?? [])
     .filter((item) => isActiveSubscription(item, now))
     .sort((a, b) => (a.plan === "pro" ? -1 : b.plan === "pro" ? 1 : 0))[0];
-  const plan: RoomorphicPlan = active?.plan ?? "free";
+  const plan: RoomFaceliftPlan = active?.plan ?? "free";
   return baseEntitlements(true, free, subscription, creditPack, plan, active?.status ?? null);
 }
 
@@ -42,7 +42,7 @@ function baseEntitlements(
   free: number,
   subscription: number,
   creditPack: number,
-  plan: RoomorphicPlan,
+  plan: RoomFaceliftPlan,
   subscriptionStatus: string | null,
 ): UserEntitlements {
   const paid = subscription + creditPack;

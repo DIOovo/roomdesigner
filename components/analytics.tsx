@@ -45,7 +45,7 @@ function CookieConsent({ choice, onChoice }: { choice: ConsentChoice; onChoice: 
   return (
     <aside aria-label="Cookie choices" className="fixed inset-x-3 bottom-3 z-50 mx-auto max-w-2xl rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-4 shadow-[var(--shadow)] sm:p-5">
       <p className="font-black">Your privacy choices</p>
-      <p className="mt-1 text-sm leading-6 text-[var(--muted)]">Essential storage keeps the site working. With permission, analytics and advertising help us measure and improve Roomorphic.</p>
+      <p className="mt-1 text-sm leading-6 text-[var(--muted)]">Essential storage keeps the site working. With permission, analytics and advertising help us measure and improve RoomFacelift.</p>
       <div className="mt-4 flex flex-wrap gap-3">
         <button type="button" onClick={() => choose("accepted")} className="focus-ring whitespace-nowrap rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-black text-[var(--on-accent)]">Allow analytics</button>
         <button type="button" onClick={() => choose("essential")} className="focus-ring whitespace-nowrap rounded-xl border border-[var(--line)] bg-[var(--surface-2)] px-4 py-2.5 text-sm font-black">Essentials only</button>

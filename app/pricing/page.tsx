@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Check } from "@phosphor-icons/react/dist/ssr";
 import { publicPageMetadata } from "@/lib/seo";
-export const metadata = publicPageMetadata({ title: "AI Room Design Video Pricing", description: "Compare Roomorphic Free, Starter, Pro, and one-time credit options for AI room transformation videos.", path: "/pricing" });
+export const metadata = publicPageMetadata({ title: "AI Room Design Video Pricing", description: "Compare RoomFacelift Free, Starter, Pro, and one-time credit options for AI room transformation videos.", path: "/pricing" });
 const offers = [
   { name: "Free", price: "$0", text: "Two 5-second previews. The first works without login. Watermarked 480p exports." },
   { name: "Starter", price: "$9.99/month", text: "20 HD videos each month with no watermark. Personal use only." },

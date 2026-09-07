@@ -1,3 +1,4 @@
+import { FalKontextAfterFrameProvider } from "./providers/fal-kontext";
 import { MockAfterFrameProvider } from "./providers/mock";
 import { RemoteAfterFrameProvider } from "./providers/remote";
 import type { AfterFrameProvider, GenerateAfterFrameInput } from "./types";
@@ -5,6 +6,7 @@ import type { AfterFrameProvider, GenerateAfterFrameInput } from "./types";
 const factories: Record<string, () => AfterFrameProvider> = {
   mock: () => new MockAfterFrameProvider(),
   remote: () => new RemoteAfterFrameProvider(),
+  "fal-kontext": () => new FalKontextAfterFrameProvider(),
 };
 
 export async function generateAfterFrame(input: GenerateAfterFrameInput) {

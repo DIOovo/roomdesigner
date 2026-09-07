@@ -11,7 +11,7 @@ export async function applyFreeWatermark(videoUrl: string) {
     allowedContentTypes: ["application/json"],
     maxBytes: 1024 * 1024,
     timeoutMs: 30_000,
-    init: { method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, body: JSON.stringify({ videoUrl, text: "Made with Roomorphic", position: "bottom-right" }) },
+    init: { method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, body: JSON.stringify({ videoUrl, text: "Made with RoomFacelift", position: "bottom-right" }) },
   });
   const data = JSON.parse(new TextDecoder().decode(response.bytes)) as { videoUrl?: string };
   if (!data.videoUrl || !isHttpUrl(data.videoUrl)) throw new Error("The watermark service could not produce a protected export.");

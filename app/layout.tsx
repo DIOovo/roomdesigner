@@ -7,7 +7,7 @@ import { siteConfig } from "@/lib/site";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
-  title: { default: "Free AI Room Design Generator (No Login) - Before After Video", template: "%s | Roomorphic" },
+  title: { default: "Free AI Room Design Generator (No Login) - Before After Video", template: "%s | RoomFacelift" },
   description: siteConfig.description,
 };
 

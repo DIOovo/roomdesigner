@@ -29,7 +29,7 @@ export function publicPageMetadata({
       title,
       description,
       url,
-      images: [{ url: absoluteUrl(socialImage), width: 1200, height: 630, alt: "Roomorphic AI room design before and after video" }],
+      images: [{ url: absoluteUrl(socialImage), width: 1200, height: 630, alt: "RoomFacelift AI room design before and after video" }],
     },
     twitter: {
       card: "summary_large_image",

@@ -23,6 +23,15 @@ test("structured data is valid JSON and stays in sync with FAQ and HowTo sources
   assert.deepEqual(howToSchema.step.map((item) => [item.name, item.text]), howToSteps.map((step) => [step.name, step.text]));
   assert.equal(schemas.filter((schema) => schema["@type"] === "Organization").length, 1);
   assert.equal(schemas.filter((schema) => schema["@type"] === "WebApplication").length, 1);
+  assert.equal(schemas.find((schema) => schema["@type"] === "Organization").name, "RoomFacelift");
+  assert.equal(schemas.find((schema) => schema["@type"] === "WebApplication").name, "RoomFacelift");
+});
+
+test("public product branding uses RoomFacelift", async () => {
+  const sources = await Promise.all(["app/layout.tsx", "components/site-header.tsx", "components/site-footer.tsx", "lib/site.ts", "lib/video/watermark.ts"].map(read));
+  assert.match(sources.join("\n"), /RoomFacelift/);
+  assert.doesNotMatch(sources.join("\n"), /Room[o]rphic/);
+  assert.match(await read("package.json"), /"name": "roomfacelift"/);
 });
 
 test("sitemap includes public routes and excludes private routes", async () => {

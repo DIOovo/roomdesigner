@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
-const secret = process.env.ANON_COOKIE_SECRET ?? "roomorphic-local-development-only";
+const secret = process.env.ANON_COOKIE_SECRET ?? "roomfacelift-local-development-only";
 
 export function createSignedToken(payload: object) {
   const encoded = Buffer.from(JSON.stringify(payload)).toString("base64url");

@@ -1,5 +1,5 @@
 export const siteConfig = {
-  name: "Roomorphic",
+  name: "RoomFacelift",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://roomorphic.com",
   description:
     "Turn one room photo into a smooth AI before and after redesign video. Your first preview is free and works without login.",
@@ -8,7 +8,7 @@ export const siteConfig = {
 export const howToSteps = [
   { key: "upload", name: "Upload a room photo", text: "Choose a clear PNG or JPG room photo under 10MB." },
   { key: "choose", name: "Choose room type and style", text: "Select the room type and one of fifteen interior styles." },
-  { key: "generate", name: "Generate a before and after video", text: "Roomorphic creates the redesign and turns both frames into a smooth transformation video." },
+  { key: "generate", name: "Generate a before and after video", text: "RoomFacelift creates the redesign and turns both frames into a smooth transformation video." },
 ] as const;
 
 export const roomTypes = [
@@ -50,9 +50,9 @@ export const samples = [
 
 export const faqs = [
   {
-    question: "Is Roomorphic AI room design free?",
+    question: "Is RoomFacelift AI room design free?",
     answer:
-      "Yes. Your first 5-second 480p preview is available free without an account. After you sign in, you can claim one more limited free preview. Free videos include a Roomorphic watermark and the allowance does not reset daily.",
+      "Yes. Your first 5-second 480p preview is available free without an account. After you sign in, you can claim one more limited free preview. Free videos include a RoomFacelift watermark and the allowance does not reset daily.",
   },
   {
     question: "Can I use AI room design without login?",
@@ -62,27 +62,27 @@ export const faqs = [
   {
     question: "Can I redesign a room from a photo?",
     answer:
-      "Upload a clear photo, choose the room type and style, and Roomorphic creates a redesigned final frame before turning both frames into a smooth transformation video.",
+      "Upload a clear photo, choose the room type and style, and RoomFacelift creates a redesigned final frame before turning both frames into a smooth transformation video.",
   },
   {
     question: "How does AI room design work?",
     answer:
-      "AI reads the visible room layout, lighting, surfaces, and furniture in your photo. Roomorphic applies your selected style while aiming to preserve the camera view and recognizable structure.",
+      "AI reads the visible room layout, lighting, surfaces, and furniture in your photo. RoomFacelift applies your selected style while aiming to preserve the camera view and recognizable structure.",
   },
   {
-    question: "Does Roomorphic make a video or only a static image?",
+    question: "Does RoomFacelift make a video or only a static image?",
     answer:
-      "Roomorphic makes a short before and after video. The original photo smoothly transforms into the redesigned room, making the idea easier to understand and share.",
+      "RoomFacelift makes a short before and after video. The original photo smoothly transforms into the redesigned room, making the idea easier to understand and share.",
   },
   {
-    question: "Can interior designers use Roomorphic?",
+    question: "Can interior designers use RoomFacelift?",
     answer:
       "Yes. Interior designers can use transformation videos to compare directions and explain concepts. Commercial usage is available on eligible plans; Starter and free exports are limited to personal use.",
   },
   {
     question: "What room types are supported?",
     answer:
-      "Roomorphic supports living rooms, bedrooms, kitchens, bathrooms, dining rooms, offices, basements, attics, and studies.",
+      "RoomFacelift supports living rooms, bedrooms, kitchens, bathrooms, dining rooms, offices, basements, attics, and studies.",
   },
   {
     question: "What interior styles are supported?",

@@ -8,7 +8,7 @@ export const posts = [
     intro: "AI room design helps you test a visual direction before buying furniture, preparing a listing, or presenting a client concept.",
     sections: [
       { title: "What AI room design can do", body: "A room design model reads the visible geometry, surfaces, lighting, and furniture in a photo. It then creates a new design that keeps the room recognizable while changing the visual language." },
-      { title: "How the workflow fits together", body: "Start with one clear photo, choose the room type, and select a focused interior style. Roomorphic creates an after frame and then uses the original and redesign as endpoints for a short transformation video." },
+      { title: "How the workflow fits together", body: "Start with one clear photo, choose the room type, and select a focused interior style. RoomFacelift creates an after frame and then uses the original and redesign as endpoints for a short transformation video." },
       { title: "Start with a useful source photo", body: "Use natural light, keep the camera level, and show as much of the room as possible. Avoid people and large foreground objects. A clean source photo gives the model more reliable spatial information." },
       { title: "Why a video is easier to evaluate", body: "A final image can look impressive without showing how it relates to the original space. A transformation video makes the relationship explicit, which helps homeowners and clients follow the idea." },
       { title: "Useful ways to compare concepts", body: "Generate one clear style at a time and compare a small number of distinct directions. Look at the room structure, circulation, materials, and overall mood rather than judging only decorative details." },
@@ -26,7 +26,7 @@ export const posts = [
       { title: "What you need before you begin", body: "Use a JPG or PNG under 10MB. A phone photo is suitable when it is sharp, level, well lit, and wide enough to show the walls, floor, openings, and main furniture." },
       { title: "Frame the whole room", body: "Stand near a corner or doorway and include the main walls, floor, and windows. Wide coverage helps preserve the architecture and camera perspective in the redesign." },
       { title: "Choose one clear style", body: "A focused direction such as Japandi, Scandinavian, or Art Deco is more reliable than combining several unrelated styles. Generate alternatives separately and compare them." },
-      { title: "Generate the before and after transition", body: "Roomorphic first prepares a redesigned after frame. It then generates a short video between the uploaded photo and that new frame, making the relationship between the two views visible." },
+      { title: "Generate the before and after transition", body: "RoomFacelift first prepares a redesigned after frame. It then generates a short video between the uploaded photo and that new frame, making the relationship between the two views visible." },
       { title: "Review continuity, not only beauty", body: "Check windows, doors, floor lines, and major furniture placement. A strong result should feel like the same room after a redesign, not a different property." },
       { title: "Improve a weak result", body: "Try a clearer source photo or a more focused style before changing many inputs at once. AI output can contain visual errors, so treat each result as a concept and verify practical details separately." },
     ],
@@ -41,10 +41,10 @@ export const posts = [
     sections: [
       { title: "Make the concept easy to follow", body: "The original room stays visible as the redesign appears. Clients can immediately understand which surfaces, furniture, and mood are changing." },
       { title: "Use video at the right stage", body: "Transformation videos work best during early direction setting, property marketing, and proposal conversations. They complement mood boards, plans, specifications, and measured drawings rather than replacing them." },
-      { title: "Use commercial rights correctly", body: "Roomorphic Pro includes commercial use for proposals, listings, and client-facing marketing. Starter exports remain for personal use only." },
+      { title: "Use commercial rights correctly", body: "RoomFacelift Pro includes commercial use for proposals, listings, and client-facing marketing. Starter exports remain for personal use only." },
       { title: "Generate focused alternatives", body: "Create one video per design direction. A small set of distinct options is easier to review than a large gallery of near-identical images." },
       { title: "Present the result clearly", body: "Explain that the video is an AI concept, name the selected style, and pair it with the project goals. Avoid presenting generated furniture, materials, or dimensions as confirmed specifications." },
-      { title: "Protect client material", body: "Use only photos you have permission to process. Keep private result links within the project team and avoid sharing signed asset URLs outside the Roomorphic result experience." },
+      { title: "Protect client material", body: "Use only photos you have permission to process. Keep private result links within the project team and avoid sharing signed asset URLs outside the RoomFacelift result experience." },
     ],
   },
 ] as const;

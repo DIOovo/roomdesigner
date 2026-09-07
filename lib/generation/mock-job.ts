@@ -1,12 +1,14 @@
 import { createSignedToken, readSignedToken } from "@/lib/security/signed-token";
+import type { DesignScope } from "./design-scope";
 
-export const MOCK_JOB_COOKIE = "roomorphic_mock_job";
+export const MOCK_JOB_COOKIE = "roomfacelift_mock_job";
 
 export type MockJobClaims = {
   id: string;
   createdAt: number;
   roomType: string;
   style: string;
+  designScope: DesignScope;
   firstFrame: string;
   lastFrame: string;
 };

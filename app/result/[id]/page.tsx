@@ -8,6 +8,7 @@ import { DownloadLink } from "@/components/result/download-link";
 import { resolveInputFrame } from "@/lib/assets/frame-assets";
 import { resolveStoredAsset } from "@/lib/assets/generated-assets";
 import { canAccessJob, getViewerIdentity } from "@/lib/generation/access";
+import { playableAssetReference } from "@/lib/generation/history-policy";
 import { MOCK_JOB_COOKIE, readMockJobToken } from "@/lib/generation/mock-job";
 import type { GenerationJob } from "@/lib/generation/types";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
@@ -30,7 +31,8 @@ async function getResult(id: string): Promise<ResultView | null> {
   if (!job || job.status !== "completed" || !canAccessJob(job, viewer)) return null;
   const firstFrame = await resolveInputFrame(admin, job.first_frame_path, job.first_frame_url);
   const lastFrame = await resolveStoredAsset(admin, job.last_frame_path, job.last_frame_url);
-  const videoUrl = await resolveStoredAsset(admin, job.is_watermarked ? job.watermarked_video_path : job.raw_video_path, job.video_url);
+  const asset = playableAssetReference(job);
+  const videoUrl = await resolveStoredAsset(admin, asset.path, asset.fallbackUrl);
   if (!firstFrame || !lastFrame || !videoUrl) return null;
   return { id, roomType: job.room_type, style: job.style, firstFrame, lastFrame, videoUrl, isWatermarked: job.is_watermarked, commercialLicense: job.commercial_license };
 }
@@ -38,7 +40,7 @@ async function getResult(id: string): Promise<ResultView | null> {
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const result = await getResult((await params).id);
   const video = result?.videoUrl ? new URL(result.videoUrl, siteConfig.url).toString() : undefined;
-  return { title: result ? `${result.style} ${result.roomType} Transformation Video` : "Private Room Transformation", description: "Watch an AI room design transform from before to after with Roomorphic.", robots: privatePageRobots, openGraph: result ? { type: "video.other", title: "Roomorphic Before and After Video", description: "A private AI room design transformation from Roomorphic.", videos: video ? [{ url: video, secureUrl: video, type: "video/mp4", width: 768, height: 768 }] : undefined } : undefined };
+  return { title: result ? `${result.style} ${result.roomType} Transformation Video` : "Private Room Transformation", description: "Watch an AI room design transform from before to after with RoomFacelift.", robots: privatePageRobots, openGraph: result ? { type: "video.other", title: "RoomFacelift Before and After Video", description: "A private AI room design transformation from RoomFacelift.", videos: video ? [{ url: video, secureUrl: video, type: "video/mp4", width: 768, height: 768 }] : undefined } : undefined };
 }
 
 export default async function ResultPage({ params }: { params: Promise<{ id: string }> }) {
@@ -59,7 +61,8 @@ export default async function ResultPage({ params }: { params: Promise<{ id: str
           <Link href="/#generator" className="focus-ring rounded-xl border border-[var(--line)] px-5 py-3 font-black">Generate another</Link>
           {result.isWatermarked ? <Link href="/#pricing" className="focus-ring rounded-xl border border-[var(--accent)] px-5 py-3 font-black text-[var(--accent)]">Upgrade for HD</Link> : null}
         </div>
-        <p className="mt-4 text-sm text-[var(--muted)]">{result.isWatermarked ? "Free exports include a baked-in Roomorphic watermark." : `This paid generation is watermark-free${result.commercialLicense ? " and includes commercial usage rights" : " for personal use"}.`} Provider URLs remain protected.</p>
+        <p className="mt-4 text-sm text-[var(--muted)]">Saved to My designs. <Link href="/my-designs" className="font-black text-[var(--accent)]">View all designs →</Link></p>
+        <p className="mt-4 text-sm text-[var(--muted)]">{result.isWatermarked ? "Free exports include a baked-in RoomFacelift watermark." : `This paid generation is watermark-free${result.commercialLicense ? " and includes commercial usage rights" : " for personal use"}.`} Provider URLs remain protected.</p>
         <AdSlot label="Result page advertisement" />
       </div>
     </main>

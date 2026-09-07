@@ -20,6 +20,9 @@ export function assertGenerationConfiguration(options: { watermarkRequired?: boo
     requireValues("remote After Image", ["AFTER_IMAGE_API_URL", "AFTER_IMAGE_API_KEY"]);
     requiredUrl("AFTER_IMAGE_API_URL");
   }
+  if (afterProvider === "fal-kontext") {
+    requireValues("fal Kontext After Image", ["FAL_KEY"]);
+  }
   if (options.watermarkRequired) {
     requireValues("free real generation", ["WATERMARK_SERVICE_URL", "WATERMARK_SERVICE_TOKEN"]);
     requiredUrl("WATERMARK_SERVICE_URL");

@@ -1,4 +1,4 @@
-export type RoomorphicPlan = "free" | "starter" | "pro";
+export type RoomFaceliftPlan = "free" | "starter" | "pro";
 export type CreditSource = "free" | "subscription" | "credit_pack" | "manual";
 
 export type UserEntitlements = {
@@ -8,7 +8,7 @@ export type UserEntitlements = {
   creditPackCreditsRemaining: number;
   paidCreditsRemaining: number;
   totalCreditsRemaining: number;
-  plan: RoomorphicPlan;
+  plan: RoomFaceliftPlan;
   subscriptionStatus: string | null;
   commercialLicense: boolean;
   priorityQueue: boolean;
@@ -21,7 +21,7 @@ export type CreditReservation = {
   errorCode: "requires_auth" | "no_credits" | "invalid_owner" | "job_not_found" | null;
   usageId: string | null;
   creditSource: CreditSource | null;
-  plan: RoomorphicPlan;
+  plan: RoomFaceliftPlan;
   resolution: "480p" | "768p";
   isWatermarked: boolean;
   commercialLicense: boolean;

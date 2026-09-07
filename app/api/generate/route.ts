@@ -9,6 +9,7 @@ import { releaseGenerationCredit, reserveGenerationCredit } from "@/lib/credits/
 import { assertGenerationConfiguration, GenerationConfigurationError } from "@/lib/config/generation";
 import { getUserEntitlements } from "@/lib/entitlements/server";
 import { createMockJobToken, MOCK_JOB_COOKIE } from "@/lib/generation/mock-job";
+import { parseRequestedDesignScope, type DesignScope } from "@/lib/generation/design-scope";
 import { getJobByRequestKey } from "@/lib/generation/repository";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { getSupabaseServer } from "@/lib/supabase/server";
@@ -22,14 +23,16 @@ export async function POST(request: Request) {
     const sample = String(form.get("sample") ?? "");
     const roomType = String(form.get("roomType") ?? "Living Room");
     const style = String(form.get("style") ?? "Japandi");
+    const designScope = parseRequestedDesignScope(form.get("designScope"));
     const clientRequestId = String(form.get("clientRequestId") ?? "");
+    if (!designScope) return NextResponse.json({ error: "Choose a valid design scope." }, { status: 400 });
     const validation = validateInput(file, sample, clientRequestId);
     if (validation) return NextResponse.json({ error: validation }, { status: 400 });
 
     const serverClient = await getSupabaseServer();
     const user = serverClient ? (await serverClient.auth.getUser()).data.user : null;
     const store = await cookies();
-    const anonymousCount = readAnonymousUsage(store.get("roomorphic_free")?.value);
+    const anonymousCount = readAnonymousUsage(store.get("roomfacelift_free")?.value);
     if (!user && anonymousCount >= 1) return authRequired();
 
     let anonymousToken = store.get(ANONYMOUS_COOKIE)?.value;
@@ -48,7 +51,7 @@ export async function POST(request: Request) {
 
     if (!admin) {
       if (!isMock) return NextResponse.json({ error: "Supabase must be configured before real generation can start." }, { status: 503 });
-      return createStatelessMockJob({ roomType, style, sample, anonymousToken });
+      return createStatelessMockJob({ roomType, style, designScope, sample, anonymousToken });
     }
 
     const existing = await getJobByRequestKey(requestKey);
@@ -68,13 +71,14 @@ export async function POST(request: Request) {
       stage: "queued",
       room_type: roomType,
       style,
+      design_scope: designScope,
       plan: "free",
       seconds: isMock ? 3 : 5,
       resolution: "480p",
       is_watermarked: true,
       commercial_license: false,
       priority_queue: false,
-      first_frame_url: firstFrame.url,
+      first_frame_url: firstFrame.path ? null : firstFrame.url,
       first_frame_path: firstFrame.path,
       provider: process.env.VIDEO_PROVIDER ?? "mock",
     });
@@ -115,11 +119,11 @@ export async function POST(request: Request) {
   }
 }
 
-function createStatelessMockJob(input: { roomType: string; style: string; sample: string; anonymousToken?: string }) {
+function createStatelessMockJob(input: { roomType: string; style: string; designScope: DesignScope; sample: string; anonymousToken?: string }) {
   const jobId = crypto.randomUUID();
   const firstFrame = input.sample || "/samples/living-before.jpg";
   const response = NextResponse.json({ jobId, status: "queued", stage: "queued", creditSource: "free", plan: "free" }, { status: 202 });
-  response.cookies.set(MOCK_JOB_COOKIE, createMockJobToken({ id: jobId, createdAt: Date.now(), roomType: input.roomType, style: input.style, firstFrame, lastFrame: mockAfterPath(input.roomType) }), cookieOptions(60 * 30));
+  response.cookies.set(MOCK_JOB_COOKIE, createMockJobToken({ id: jobId, createdAt: Date.now(), roomType: input.roomType, style: input.style, designScope: input.designScope, firstFrame, lastFrame: mockAfterPath(input.roomType) }), cookieOptions(60 * 30));
   if (input.anonymousToken) response.cookies.set(ANONYMOUS_COOKIE, input.anonymousToken, cookieOptions(60 * 60 * 24 * 365));
   return response;
 }

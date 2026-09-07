@@ -23,7 +23,9 @@ const plans: readonly Plan[] = [
   { name: "Credit Pack", price: "$19.99", note: "one-time", features: ["30 video credits", "5-second HD video", "Valid for one year", "No subscription"] },
 ];
 
-export default function HomePage() {
+export default async function HomePage({ searchParams }: { searchParams: Promise<{ reuse?: string | string[] }> }) {
+  const query = await searchParams;
+  const reuseId = typeof query.reuse === "string" ? query.reuse : undefined;
   return (
     <main>
       <StructuredData />
@@ -39,7 +41,7 @@ export default function HomePage() {
             Upload one room photo. Watch it transform into your chosen style in a smooth 5-second video.
           </p>
         </div>
-        <div className="hero-enter-delay"><RoomGenerator /></div>
+        <div className="hero-enter-delay"><RoomGenerator reuseId={reuseId} /></div>
         <p className="mt-3 max-w-4xl text-sm leading-6 text-[var(--muted)]">
           Try AI room design from a photo with no login for your first preview. Free previews are limited and include a watermark.
         </p>
@@ -49,7 +51,7 @@ export default function HomePage() {
         <div className="shell">
           <div className="max-w-2xl">
             <h2 className="text-4xl font-black tracking-[-0.045em] md:text-6xl">Not another static room render.</h2>
-            <p className="mt-5 max-w-xl text-lg leading-8 text-[var(--muted)]">Most AI room design tools create a static image. Roomorphic creates a smooth before and after room transformation video, so the change is easier to understand and share.</p>
+            <p className="mt-5 max-w-xl text-lg leading-8 text-[var(--muted)]">Most AI room design tools create a static image. RoomFacelift creates a smooth before and after room transformation video, so the change is easier to understand and share.</p>
           </div>
           <div className="mt-12 grid gap-5 lg:grid-cols-[1.25fr_.75fr]">
             <div className="surface p-3 md:p-4">
