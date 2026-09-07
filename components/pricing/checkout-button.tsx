@@ -26,7 +26,7 @@ export function CheckoutButton({ plan, children, featured = false }: { plan: "st
         else if (response.status === 401) window.location.assign(`/login?next=${encodeURIComponent("/#pricing")}`);
         else { window.alert(data.error ?? "Checkout is not configured yet."); setLoading(false); }
       }}
-      className={`focus-ring mt-7 w-full whitespace-nowrap rounded-xl px-4 py-3 text-sm font-black transition-transform active:scale-[.98] disabled:opacity-60 ${featured ? "bg-[var(--accent)] text-[var(--on-accent)]" : "border border-[var(--line)] bg-[var(--surface-2)] text-[var(--ink)]"}`}
+      className={`focus-ring mt-7 w-full whitespace-nowrap rounded-lg px-4 py-3 text-sm font-black active:scale-[.98] disabled:cursor-not-allowed disabled:border-[var(--line)] disabled:bg-[var(--surface-2)] disabled:text-[var(--muted)] ${featured ? "bg-[var(--accent)] text-[var(--on-accent)] hover:bg-[var(--accent-strong)]" : "border border-[var(--line)] bg-[var(--surface-2)] text-[var(--ink)] hover:border-[var(--accent)]"}`}
     >
       {!checkoutEnabled ? "Choose plan" : loading ? "Opening checkout..." : authenticated === false ? "Get started" : children}
     </button>

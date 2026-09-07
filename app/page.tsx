@@ -29,11 +29,11 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
   return (
     <main>
       <StructuredData />
-      <section id="generator" className="shell min-h-[calc(100dvh-4rem)] py-5 lg:py-6">
-        <div className="hero-enter mb-4 grid gap-3 lg:grid-cols-[1fr_auto] lg:items-end">
+      <section id="generator" className="shell py-8 lg:py-12">
+        <div className="hero-enter mb-8 grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-end">
           <div>
-            <p className="mb-2 text-sm font-black text-[var(--accent)]">Photo in. Transformation video out.</p>
-            <h1 className="max-w-4xl text-[clamp(2.1rem,4vw,4.5rem)] font-black leading-[.95] tracking-[-0.055em]">
+            <p className="mb-3 text-sm font-semibold tracking-[.01em] text-[var(--accent)]">Photo in. Transformation video out.</p>
+            <h1 className="max-w-5xl text-[clamp(2.35rem,4.2vw,4.5rem)] leading-[.98]">
               Free AI Room Design Generator <span className="text-[var(--muted)]">— Before &amp; After Video</span>
             </h1>
           </div>
@@ -47,10 +47,10 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         </p>
       </section>
 
-      <section id="examples" className="border-y border-[var(--line)] py-20 md:py-28">
+      <section id="examples" className="border-y border-[var(--line)] bg-[color:var(--surface)]/35 py-20 md:py-28">
         <div className="shell">
           <div className="max-w-2xl">
-            <h2 className="text-4xl font-black tracking-[-0.045em] md:text-6xl">Not another static room render.</h2>
+            <h2 className="text-4xl md:text-6xl">Not another static room render.</h2>
             <p className="mt-5 max-w-xl text-lg leading-8 text-[var(--muted)]">Most AI room design tools create a static image. RoomFacelift creates a smooth before and after room transformation video, so the change is easier to understand and share.</p>
           </div>
           <div className="mt-12 grid gap-5 lg:grid-cols-[1.25fr_.75fr]">
@@ -58,7 +58,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
               <ComparisonSlider before="/samples/living-before.jpg" after="/samples/living-after.jpg" label="Japandi living room" />
               <div className="flex flex-wrap items-center justify-between gap-4 px-1 pb-1 pt-4">
                 <div><h3 className="text-lg font-black">Japandi living room</h3><p className="text-sm text-[var(--muted)]">Same room. Same camera. A completely new direction.</p></div>
-                <a href="/videos/living-japandi.mp4" className="focus-ring flex items-center gap-2 rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-bold text-[var(--on-accent)]"><Play size={17} weight="fill" /> Play video</a>
+                <a href="/videos/living-japandi.mp4" className="focus-ring flex items-center gap-2 rounded-lg bg-[var(--accent)] px-4 py-2.5 text-sm font-bold text-[var(--on-accent)] shadow-[0_8px_20px_rgba(18,75,55,.16)] hover:bg-[var(--accent-strong)]"><Play size={17} weight="fill" /> Play video</a>
               </div>
             </div>
             <div className="grid gap-5">
@@ -71,8 +71,8 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
 
       <section id="how-it-works" className="shell py-20 md:py-28">
         <div className="max-w-2xl">
-          <p className="mb-3 text-sm font-black text-[var(--accent)]">Three steps</p>
-          <h2 className="text-4xl font-black tracking-[-0.045em] md:text-6xl">From room photo to reveal video.</h2>
+          <p className="mb-3 text-sm font-bold text-[var(--accent)]">Three steps</p>
+          <h2 className="text-4xl md:text-6xl">From room photo to reveal video.</h2>
         </div>
         <div className="mt-12 grid gap-5 md:grid-cols-[1.1fr_.9fr]">
           <div className="surface relative min-h-[470px] overflow-hidden">
@@ -100,13 +100,13 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         </div>
       </section>
 
-      <section className="border-y border-[var(--line)] py-20 md:py-28">
+      <section className="border-y border-[var(--line)] bg-[color:var(--surface)]/35 py-20 md:py-28">
         <div className="shell grid gap-10 lg:grid-cols-[.7fr_1.3fr]">
-          <div><h2 className="text-4xl font-black tracking-[-0.045em] md:text-5xl">Questions before you redesign?</h2><p className="mt-5 max-w-md leading-7 text-[var(--muted)]">Straight answers about free previews, no-login use, photo quality, and professional licensing.</p></div>
+          <div><h2 className="text-4xl md:text-5xl">Questions before you redesign?</h2><p className="mt-5 max-w-md leading-7 text-[var(--muted)]">Straight answers about free previews, no-login use, photo quality, and professional licensing.</p></div>
           <div className="grid gap-3">
             {faqs.map((faq) => (
               <details key={faq.question} className="group surface p-5 open:bg-[var(--surface-2)]">
-                <summary className="focus-ring cursor-pointer list-none pr-8 text-lg font-black marker:hidden">{faq.question}</summary>
+                <summary className="focus-ring cursor-pointer list-none rounded-sm pr-8 text-lg font-bold marker:hidden">{faq.question}</summary>
                 <p className="mt-3 max-w-3xl leading-7 text-[var(--muted)]">{faq.answer}</p>
               </details>
             ))}
@@ -115,10 +115,10 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       </section>
 
       <section id="pricing" className="shell py-20 md:py-28">
-        <div className="max-w-2xl"><h2 className="text-4xl font-black tracking-[-0.045em] md:text-6xl">Start free. Pay when the work gets serious.</h2><p className="mt-5 text-lg leading-8 text-[var(--muted)]">Every real generation is five seconds. Commercial rights are reserved for Pro.</p></div>
+        <div className="max-w-2xl"><h2 className="text-4xl md:text-6xl">Start free. Pay when the work gets serious.</h2><p className="mt-5 text-lg leading-8 text-[var(--muted)]">Every real generation is five seconds. Commercial rights are reserved for Pro.</p></div>
         <div className="mt-12 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {plans.map((plan) => (
-            <article key={plan.name} className={`surface relative flex flex-col p-5 ${plan.featured ? "soft-shadow border-[var(--accent)] lg:-translate-y-4" : ""}`}>
+            <article key={plan.name} className={`surface relative flex flex-col p-6 ${plan.featured ? "soft-shadow border-[var(--accent)] lg:-translate-y-4" : ""}`}>
               {plan.featured ? <span className="mb-4 w-fit rounded-lg bg-[var(--accent)] px-2.5 py-1 text-xs font-black text-[var(--on-accent)]">Most Popular</span> : null}
               <h3 className="text-lg font-black">{plan.name}</h3>
               <p className="mt-5 text-4xl font-black tracking-[-0.045em]">{plan.price}</p>
@@ -127,7 +127,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                 {plan.features.map((feature) => <li key={feature} className="flex items-start gap-2"><Check size={17} weight="bold" className="mt-0.5 shrink-0 text-[var(--accent)]" />{feature}</li>)}
               </ul>
               <div className="mt-auto">
-                {plan.name === "Free" ? <Link href="#generator" className="focus-ring mt-7 flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--line)] bg-[var(--surface-2)] px-4 py-3 text-sm font-black">Try free <ArrowRight size={16} weight="bold" /></Link> : <CheckoutButton plan={plan.name === "Starter" ? "starter" : plan.name === "Pro" ? "pro" : "credits"} featured={plan.featured}>Choose {plan.name}</CheckoutButton>}
+                {plan.name === "Free" ? <Link href="#generator" className="focus-ring mt-7 flex w-full items-center justify-center gap-2 rounded-lg border border-[var(--line)] bg-[var(--surface-2)] px-4 py-3 text-sm font-black hover:border-[var(--accent)]">Try free <ArrowRight size={16} weight="bold" /></Link> : <CheckoutButton plan={plan.name === "Starter" ? "starter" : plan.name === "Pro" ? "pro" : "credits"} featured={plan.featured}>Choose {plan.name}</CheckoutButton>}
               </div>
             </article>
           ))}

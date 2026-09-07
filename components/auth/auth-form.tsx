@@ -58,15 +58,15 @@ export function AuthForm({ mode, returnTo = "/#generator", initialMessage = "" }
   }
 
   return (
-    <form onSubmit={submit} className="surface mt-8 grid gap-4 p-6">
-      <button type="button" onClick={continueWithGoogle} disabled={pending !== null} className="focus-ring flex min-h-12 items-center justify-center gap-3 rounded-xl border border-[var(--line)] bg-white px-5 py-3.5 font-black text-[#202124] shadow-sm transition-colors hover:bg-[#f8f9fa] disabled:opacity-60">
+    <form onSubmit={submit} className="surface soft-shadow mt-8 grid gap-4 border-transparent p-6 sm:p-7">
+      <button type="button" onClick={continueWithGoogle} disabled={pending !== null} className="focus-ring flex min-h-12 items-center justify-center gap-3 rounded-lg border border-[var(--line)] bg-white px-5 py-3.5 font-black text-[#202124] hover:border-[#b8bcb9] hover:bg-[#f8f9fa] disabled:opacity-60">
         <GoogleMark /> {pending === "google" ? "Connecting to Google..." : "Continue with Google"}
       </button>
       <div className="flex items-center gap-3 py-1" aria-hidden="true"><span className="h-px flex-1 bg-[var(--line)]" /><span className="text-xs font-bold uppercase tracking-[.12em] text-[var(--muted)]">or</span><span className="h-px flex-1 bg-[var(--line)]" /></div>
       <p className="text-sm font-black">Continue with email</p>
-      <label className="grid gap-2 text-sm font-bold">Email address<input required autoComplete="email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" className="focus-ring h-12 rounded-xl border border-[var(--line)] bg-[var(--surface-2)] px-4 font-normal text-[var(--ink)] placeholder:text-[var(--muted)]" /></label>
-      <label className="grid gap-2 text-sm font-bold">Password<input required minLength={8} autoComplete={mode === "signup" ? "new-password" : "current-password"} type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="At least 8 characters" className="focus-ring h-12 rounded-xl border border-[var(--line)] bg-[var(--surface-2)] px-4 font-normal text-[var(--ink)] placeholder:text-[var(--muted)]" /></label>
-      <button disabled={pending !== null} className="focus-ring rounded-xl bg-[var(--accent)] px-5 py-3.5 font-black text-[var(--on-accent)] disabled:opacity-60">{pending === "email" ? "Please wait..." : mode === "signup" ? "Create account" : "Sign in"}</button>
+      <label className="grid gap-2 text-sm font-bold">Email address<input required autoComplete="email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" className="focus-ring h-12 rounded-lg border border-[var(--line)] bg-[var(--surface-2)] px-4 font-normal text-[var(--ink)] hover:border-[var(--accent)] placeholder:text-[var(--muted)]" /></label>
+      <label className="grid gap-2 text-sm font-bold">Password<input required minLength={8} autoComplete={mode === "signup" ? "new-password" : "current-password"} type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="At least 8 characters" className="focus-ring h-12 rounded-lg border border-[var(--line)] bg-[var(--surface-2)] px-4 font-normal text-[var(--ink)] hover:border-[var(--accent)] placeholder:text-[var(--muted)]" /></label>
+      <button disabled={pending !== null} className="focus-ring rounded-lg bg-[var(--accent)] px-5 py-3.5 font-black text-[var(--on-accent)] shadow-[0_10px_24px_rgba(18,75,55,.18)] hover:bg-[var(--accent-strong)] disabled:opacity-60 disabled:shadow-none">{pending === "email" ? "Please wait..." : mode === "signup" ? "Create account" : "Sign in"}</button>
       {message ? <p role="status" className="text-sm leading-6 text-[var(--muted)]">{message}</p> : null}
       <p className="text-sm text-[var(--muted)]">{mode === "signup" ? "Already have an account?" : "New to RoomFacelift?"} <Link className="font-bold text-[var(--accent)] underline" href={`${mode === "signup" ? "/login" : "/signup"}?next=${encodeURIComponent(target)}`}>{mode === "signup" ? "Sign in" : "Create one"}</Link></p>
     </form>

@@ -1,16 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #f4f6f5;
-  --surface: #fbfcfb;
-  --surface-2: #e8ecea;
-  --ink: #15201b;
-  --muted: #59645f;
-  --line: #d3d9d5;
-  --accent: #176b4d;
-  --accent-strong: #0f563d;
-  --on-accent: #f7fbf8;
-  --shadow: 0 24px 70px rgb(20 43 32 / 0.12);
+  --bg: #f2f1ec;
+  --surface: #fffefa;
+  --surface-2: #e9ece6;
+  --ink: #17201c;
+  --muted: #59635e;
+  --line: #d4d8d1;
+  --accent: #1c654b;
+  --accent-strong: #124b37;
+  --on-accent: #f8fbf8;
+  --shadow: 0 22px 56px rgb(24 43 34 / 0.13), 0 4px 12px rgb(24 43 34 / 0.05);
+  --shadow-soft: 0 12px 32px rgb(24 43 34 / 0.08);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -32,20 +33,48 @@
 html { scroll-behavior: smooth; }
 body {
   margin: 0;
-  background: var(--bg);
+  min-height: 100dvh;
+  background:
+    radial-gradient(ellipse 70% 36% at 16% -8%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 72%),
+    var(--bg);
   color: var(--ink);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", Inter, "Helvetica Neue", Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
   text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 a { color: inherit; text-decoration: none; }
 button, input, select { font: inherit; }
 button { cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+button, a, input, select, summary { -webkit-tap-highlight-color: transparent; }
+h1, h2 {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", Inter, "Helvetica Neue", Arial, sans-serif;
+  font-weight: 650 !important;
+  letter-spacing: -0.025em !important;
+  text-wrap: balance;
+}
+p { text-wrap: pretty; }
+.font-black { font-weight: 700; }
 ::selection { background: color-mix(in srgb, var(--accent) 28%, transparent); }
 
 .shell { width: min(1400px, calc(100% - 32px)); margin-inline: auto; }
-.surface { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; }
-.focus-ring:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 45%, transparent); outline-offset: 3px; }
+.surface { background: color-mix(in srgb, var(--surface) 96%, transparent); border: 1px solid var(--line); border-radius: 14px; }
+.focus-ring:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .soft-shadow { box-shadow: var(--shadow); }
+
+@media (hover: hover) {
+  a, button, summary { transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease; }
+  a:hover { text-decoration-color: currentColor; }
+  button:not(:disabled):hover { transform: translateY(-1px); }
+}
+
+* { scrollbar-color: color-mix(in srgb, var(--accent) 40%, var(--surface-2)) transparent; scrollbar-width: thin; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--accent) 32%, var(--surface-2)); border: 3px solid transparent; border-radius: 999px; background-clip: padding-box; }
+input::placeholder { color: color-mix(in srgb, var(--muted) 80%, transparent); }
+select { color-scheme: light dark; }
 
 @keyframes rise {
   from { opacity: 0; transform: translateY(16px); }
@@ -61,8 +90,8 @@ button { cursor: pointer; }
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .hero-enter { animation: rise 700ms cubic-bezier(.16,1,.3,1) both; }
-  .hero-enter-delay { animation: rise 700ms 110ms cubic-bezier(.16,1,.3,1) both; }
+  .hero-enter { animation: rise 620ms cubic-bezier(.16,1,.3,1) both; }
+  .hero-enter-delay { animation: rise 620ms 90ms cubic-bezier(.16,1,.3,1) both; }
   .after-sweep { animation: sweep 5s cubic-bezier(.16,1,.3,1) infinite alternate; }
 }
 

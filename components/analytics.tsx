@@ -43,12 +43,12 @@ function CookieConsent({ choice, onChoice }: { choice: ConsentChoice; onChoice: 
     onChoice(next);
   }
   return (
-    <aside aria-label="Cookie choices" className="fixed inset-x-3 bottom-3 z-50 mx-auto max-w-2xl rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-4 shadow-[var(--shadow)] sm:p-5">
-      <p className="font-black">Your privacy choices</p>
+    <aside aria-label="Cookie choices" className="fixed inset-x-3 bottom-3 z-50 mx-auto max-w-2xl rounded-xl border border-[var(--line)] bg-[color:var(--surface)]/96 p-4 shadow-[var(--shadow)] backdrop-blur-xl sm:p-5">
+      <p className="font-bold">Your privacy choices</p>
       <p className="mt-1 text-sm leading-6 text-[var(--muted)]">Essential storage keeps the site working. With permission, analytics and advertising help us measure and improve RoomFacelift.</p>
       <div className="mt-4 flex flex-wrap gap-3">
-        <button type="button" onClick={() => choose("accepted")} className="focus-ring whitespace-nowrap rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-black text-[var(--on-accent)]">Allow analytics</button>
-        <button type="button" onClick={() => choose("essential")} className="focus-ring whitespace-nowrap rounded-xl border border-[var(--line)] bg-[var(--surface-2)] px-4 py-2.5 text-sm font-black">Essentials only</button>
+        <button type="button" onClick={() => choose("accepted")} className="focus-ring whitespace-nowrap rounded-lg bg-[var(--accent)] px-4 py-2.5 text-sm font-black text-[var(--on-accent)] hover:bg-[var(--accent-strong)]">Allow analytics</button>
+        <button type="button" onClick={() => choose("essential")} className="focus-ring whitespace-nowrap rounded-lg border border-[var(--line)] bg-[var(--surface-2)] px-4 py-2.5 text-sm font-black hover:border-[var(--accent)]">Essentials only</button>
         <a href="/privacy" className="focus-ring rounded-lg px-2 py-2.5 text-sm font-bold text-[var(--accent)] underline">Privacy policy</a>
       </div>
     </aside>

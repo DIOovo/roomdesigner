@@ -181,13 +181,13 @@ export function RoomGenerator({ reuseId }: { reuseId?: string }) {
   }
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[minmax(0,.78fr)_minmax(0,1.22fr)]">
-      <div className="surface relative overflow-hidden p-3 sm:min-h-[310px] sm:p-4">
-        <div className="relative h-[132px] overflow-hidden rounded-xl bg-[var(--surface-2)] sm:h-[184px]">
+    <div className="grid min-w-0 lg:grid-cols-[minmax(0,.96fr)_minmax(500px,1.04fr)] lg:items-start">
+      <section aria-label="Room photo" className="min-w-0 lg:sticky lg:top-24 lg:pr-12">
+        <div className="relative aspect-[4/3] overflow-hidden rounded-[14px] bg-[var(--surface-2)] shadow-[0_20px_60px_rgba(24,43,34,.12)] sm:aspect-[16/10] lg:aspect-[4/3]">
           <Image src={preview} alt="Selected room ready for AI redesign" fill priority className="object-cover" sizes="(max-width:1024px) 100vw, 42vw" />
-          <div className="absolute inset-x-3 bottom-3 flex items-center justify-between rounded-xl bg-[color:var(--surface)]/92 px-3 py-2 text-xs font-bold backdrop-blur-md">
-            <span className="flex items-center gap-2"><ImageSquare size={16} weight="bold" /> Before frame</span>
-            <span className="text-[var(--accent)]">Ready</span>
+          <div className="absolute inset-x-4 top-4 flex items-center justify-between text-xs font-semibold sm:inset-x-5 sm:top-5">
+            <span className="flex items-center gap-2 rounded-full bg-black/58 px-3 py-1.5 text-white backdrop-blur-md"><ImageSquare size={15} weight="bold" /> Before</span>
+            <span className="rounded-full bg-[color:var(--surface)]/92 px-3 py-1.5 text-[var(--accent)] backdrop-blur-md">Ready</span>
           </div>
         </div>
         <input
@@ -202,51 +202,47 @@ export function RoomGenerator({ reuseId }: { reuseId?: string }) {
           onClick={() => inputRef.current?.click()}
           onDragOver={(event) => event.preventDefault()}
           onDrop={(event) => { event.preventDefault(); const dropped = event.dataTransfer.files[0]; if (dropped) { track("upload_started", { type: dropped.type }); validateFile(dropped); } }}
-          className="focus-ring mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--line)] bg-[var(--surface-2)] px-3 py-2 text-sm font-bold transition-colors hover:border-[var(--accent)] active:scale-[.99] sm:mt-3 sm:px-4 sm:py-3"
+          className="focus-ring mt-5 flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-[var(--line)] bg-transparent px-4 text-sm font-semibold text-[var(--ink)] hover:border-[var(--muted)] hover:bg-[color:var(--surface)]/65 active:scale-[.99]"
         >
-          <UploadSimple size={18} weight="bold" /> Upload or drop a room photo
-          <span className="font-normal text-[var(--muted)]">PNG/JPG, 10MB max</span>
+          <UploadSimple size={17} weight="bold" /> {file ? "Replace photo" : "Upload or drop a room photo"}
+          <span className="font-normal text-[var(--muted)]">PNG/JPG · 10MB max</span>
         </button>
-        <div className="mt-2 grid grid-cols-[auto_repeat(4,1fr)] items-center gap-2 sm:mt-3">
-          <span className="text-xs font-bold text-[var(--muted)]">Try a sample</span>
+        <div className="mt-4 grid grid-cols-[auto_repeat(4,minmax(0,1fr))] items-center gap-2.5">
+          <span className="pr-1 text-xs font-semibold text-[var(--muted)]">Try a sample</span>
           {samples.map((sample) => (
             <button
               type="button"
               key={sample.src}
               onClick={() => { setFile(null); setPreview(sample.src); setStatus("idle"); track("sample_selected", { sample: sample.name }); }}
               aria-label={`Try ${sample.name} sample`}
-              className={`focus-ring relative h-11 overflow-hidden rounded-lg border-2 ${preview === sample.src && !file ? "border-[var(--accent)]" : "border-transparent"}`}
+              className={`focus-ring relative aspect-[16/9] overflow-hidden rounded-md ${preview === sample.src && !file ? "ring-1 ring-[var(--accent)] ring-offset-2 ring-offset-[var(--bg)]" : "opacity-60 hover:opacity-100"}`}
             >
               <Image src={sample.src} alt="" fill className="object-cover" sizes="64px" />
             </button>
           ))}
         </div>
-      </div>
+      </section>
 
-      <div className="surface min-w-0 flex flex-col p-3 sm:p-4">
-        <div className="grid gap-3 sm:grid-cols-[190px_1fr] sm:items-end">
-          <label className="grid gap-1.5 text-xs font-bold text-[var(--muted)]">
-            Room type
-            <select value={room} onChange={(event) => { const roomType = event.target.value as typeof room; setRoom(roomType); track("room_type_selected", { roomType }); }} className="focus-ring h-11 rounded-xl border border-[var(--line)] bg-[var(--surface-2)] px-3 text-sm font-semibold text-[var(--ink)]">
+      <section aria-label="Room design settings" className="mt-10 min-w-0 border-t border-[var(--line)] pt-9 lg:mt-0 lg:border-l lg:border-t-0 lg:pl-12 lg:pt-0">
+        <div className="grid gap-3 sm:grid-cols-[1fr_15rem] sm:items-center">
+          <div><p className="text-sm font-semibold text-[var(--ink)]">Room type</p><p className="mt-1 text-xs leading-5 text-[var(--muted)]">Choose the space you want to transform.</p></div>
+          <label className="sr-only" htmlFor="room-type">Room type</label>
+          <select id="room-type" value={room} onChange={(event) => { const roomType = event.target.value as typeof room; setRoom(roomType); track("room_type_selected", { roomType }); }} className="focus-ring h-12 w-full rounded-lg border border-[var(--line)] bg-[color:var(--surface)]/70 px-4 text-sm font-semibold text-[var(--ink)] hover:border-[var(--muted)]">
               {roomTypes.map((item) => <option key={item}>{item}</option>)}
-            </select>
-          </label>
-          <div>
-            <p className="mb-1.5 text-xs font-bold text-[var(--muted)]">Choose a style</p>
-            <p className="text-sm font-bold">{selectedStyleLabel}</p>
-          </div>
+          </select>
         </div>
-        <div className="mt-4">
-          <p className="mb-1.5 text-xs font-bold text-[var(--muted)]">Design scope</p>
-          <div className="grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label="Design scope">
+
+        <div className="mt-5 border-t border-[var(--line)] pt-5">
+          <div className="mb-3"><p className="text-sm font-semibold text-[var(--ink)]">Design scope</p><p className="mt-1 text-xs leading-5 text-[var(--muted)]">Decide how much of the room can change.</p></div>
+          <div className="grid gap-1 rounded-xl bg-[var(--surface-2)] p-1 sm:grid-cols-2" role="radiogroup" aria-label="Design scope">
             <button
               type="button"
               role="radio"
               aria-checked={designScope === "keep-layout"}
               onClick={() => setDesignScope("keep-layout")}
-              className={`focus-ring rounded-xl border-2 p-3 text-left transition-[border-color,background-color] ${designScope === "keep-layout" ? "border-[var(--accent)] bg-[var(--surface-2)]" : "border-[var(--line)] hover:border-[var(--muted)]"}`}
+              className={`focus-ring rounded-lg px-4 py-3 text-left ${designScope === "keep-layout" ? "bg-[var(--surface)] shadow-[0_3px_12px_rgba(24,43,34,.08)]" : "text-[var(--muted)] hover:bg-[color:var(--surface)]/55"}`}
             >
-              <span className="flex items-center justify-between gap-2"><span className="text-sm font-black">Keep layout</span><span className="whitespace-nowrap rounded-full bg-[var(--accent)]/12 px-2 py-0.5 text-[10px] font-black text-[var(--accent)]">Recommended</span></span>
+              <span className="flex items-center justify-between gap-2"><span className="text-sm font-semibold text-[var(--ink)]">Keep layout</span><span className="whitespace-nowrap rounded-full bg-[var(--accent)]/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[.06em] text-[var(--accent)]">Recommended</span></span>
               <span className="mt-1 block text-xs leading-5 text-[var(--muted)]">Preserve windows, doors, walls, and major fixed elements.</span>
             </button>
             <button
@@ -254,36 +250,42 @@ export function RoomGenerator({ reuseId }: { reuseId?: string }) {
               role="radio"
               aria-checked={designScope === "reimagine-space"}
               onClick={() => setDesignScope("reimagine-space")}
-              className={`focus-ring rounded-xl border-2 p-3 text-left transition-[border-color,background-color] ${designScope === "reimagine-space" ? "border-[var(--accent)] bg-[var(--surface-2)]" : "border-[var(--line)] hover:border-[var(--muted)]"}`}
+              className={`focus-ring rounded-lg px-4 py-3 text-left ${designScope === "reimagine-space" ? "bg-[var(--surface)] shadow-[0_3px_12px_rgba(24,43,34,.08)]" : "text-[var(--muted)] hover:bg-[color:var(--surface)]/55"}`}
             >
-              <span className="flex items-center justify-between gap-2"><span className="text-sm font-black">Reimagine space</span><span className="whitespace-nowrap rounded-full bg-[var(--surface-2)] px-2 py-0.5 text-[10px] font-black text-[var(--muted)]">For inspiration</span></span>
+              <span className="flex items-center justify-between gap-2"><span className="text-sm font-semibold text-[var(--ink)]">Reimagine space</span><span className="whitespace-nowrap rounded-full bg-[color:var(--ink)]/[.06] px-2 py-0.5 text-[9px] font-bold uppercase tracking-[.06em] text-[var(--muted)]">For inspiration</span></span>
               <span className="mt-1 block text-xs leading-5 text-[var(--muted)]">Allow larger design changes for concept exploration.</span>
             </button>
           </div>
         </div>
-        <div className="mt-3 grid min-w-0 max-w-full flex-1 auto-cols-[76px] grid-flow-col grid-rows-1 gap-2 overflow-x-auto pb-1 sm:grid-flow-row sm:grid-cols-5 sm:grid-rows-none sm:overflow-visible sm:pb-0">
+        <div className="mt-5 border-t border-[var(--line)] pt-5">
+          <div className="mb-3 flex items-end justify-between gap-4"><div><p className="text-sm font-semibold text-[var(--ink)]">Style</p><p className="mt-1 text-xs leading-5 text-[var(--muted)]">Choose the visual direction for your room.</p></div><p className="shrink-0 text-xs font-semibold text-[var(--accent)]">{selectedStyleLabel}</p></div>
+          <div className="grid min-w-0 grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-5">
           {styles.map((item) => (
             <button
               type="button"
               key={item.name}
               onClick={() => { setStyle(item.name); track("style_selected", { style: item.name }); }}
-              className={`focus-ring group relative min-h-[62px] overflow-hidden rounded-xl border-2 text-left transition-[transform,border-color,box-shadow] active:scale-[.97] ${style === item.name ? "border-[var(--accent)] ring-2 ring-[var(--accent)] ring-offset-1 ring-offset-[var(--surface)]" : "border-transparent hover:border-[var(--line)]"}`}
+              className={`focus-ring group relative aspect-[16/10] min-w-0 overflow-hidden rounded-lg text-left active:scale-[.98] ${style === item.name ? "ring-1 ring-[var(--accent)] ring-offset-2 ring-offset-[var(--bg)]" : "opacity-[.78] hover:opacity-100"}`}
               aria-pressed={style === item.name}
             >
-              <Image src={item.image} alt={item.alt} fill className="object-cover transition-transform duration-300 group-hover:scale-105" sizes="(max-width: 639px) 76px, 110px" />
-              <span aria-hidden="true" className={`absolute inset-0 transition-colors ${style === item.name ? "bg-[rgba(21,110,66,.12)]" : "bg-transparent"}`} />
-              <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[rgba(8,14,11,.92)] via-[rgba(8,14,11,.68)] to-transparent px-1.5 pb-1 pt-3 text-[9px] font-extrabold leading-tight text-white">{item.name}</span>
-              {style === item.name ? <span className="absolute right-1.5 top-1.5 grid size-5 place-items-center rounded-full bg-[var(--accent)] text-[var(--on-accent)] shadow-[0_2px_8px_rgba(0,0,0,.28)]"><Check size={12} weight="bold" /></span> : null}
+              <Image src={item.image} alt={item.alt} fill className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.035]" sizes="(max-width: 639px) 46vw, (max-width: 1279px) 28vw, 120px" />
+              <span aria-hidden="true" className={`absolute inset-0 bg-gradient-to-t from-black/72 via-black/5 to-transparent transition-colors ${style === item.name ? "bg-[color:var(--accent)]/10" : ""}`} />
+              <span className="absolute inset-x-0 bottom-0 px-2.5 pb-2 pt-6 text-[11px] font-semibold leading-tight text-white">{item.name}</span>
+              {style === item.name ? <span className="absolute right-2 top-2 grid size-5 place-items-center rounded-full bg-[var(--surface)] text-[var(--accent)] shadow-[0_3px_10px_rgba(0,0,0,.18)]"><Check size={12} weight="bold" /></span> : null}
             </button>
           ))}
+          </div>
         </div>
-        {reuseMessage ? <p className="mt-3 rounded-xl border border-[var(--line)] bg-[var(--surface-2)] px-3 py-2 text-xs font-semibold leading-5 text-[var(--muted)]" role="status">{reuseMessage}</p> : null}
-        <button type="button" onClick={handlePrimaryAction} disabled={status === "queued" || status === "processing"} className="focus-ring mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[var(--accent)] px-5 text-base font-black text-[var(--on-accent)] transition-transform enabled:active:scale-[.99] disabled:cursor-wait disabled:opacity-70">
-          {status === "queued" || status === "processing" ? <><FilmStrip size={20} weight="fill" /> Generating video...</> : <>{generateLabel(entitlements)} <ArrowRight size={20} weight="bold" /></>}
-        </button>
-        {entitlements ? <p className="mt-2 text-center text-xs font-bold text-[var(--muted)]">{creditLabel(entitlements)}</p> : null}
+
+        {reuseMessage ? <p className="mt-6 rounded-lg bg-[var(--surface-2)] px-4 py-3 text-xs font-medium leading-5 text-[var(--muted)]" role="status">{reuseMessage}</p> : null}
+        <div className="mt-6 flex flex-col gap-4 border-t border-[var(--line)] pt-5 sm:flex-row sm:items-center sm:justify-between">
+          <div><p className="text-sm font-semibold text-[var(--ink)]">Ready to generate</p><p className="mt-1 text-sm text-[var(--muted)]">{selectedStyleLabel} · {designScope === "keep-layout" ? "Keep layout" : "Reimagine space"}</p>{entitlements ? <p className="mt-1 text-xs font-medium text-[var(--muted)]">{creditLabel(entitlements)}</p> : null}</div>
+          <button type="button" onClick={handlePrimaryAction} disabled={status === "queued" || status === "processing"} className="focus-ring flex min-h-12 min-w-44 items-center justify-center gap-2 rounded-lg bg-[var(--accent)] px-6 text-sm font-semibold text-[var(--on-accent)] shadow-[0_10px_24px_rgba(18,75,55,.18)] enabled:hover:bg-[var(--accent-strong)] enabled:active:scale-[.98] disabled:cursor-wait disabled:opacity-65 disabled:shadow-none">
+            {status === "queued" || status === "processing" ? <><FilmStrip size={19} weight="fill" /> Generating video...</> : <>{generateLabel(entitlements)} <ArrowRight size={18} weight="bold" /></>}
+          </button>
+        </div>
         {status !== "idle" ? (
-          <div className={`mt-3 rounded-xl border p-3 text-sm ${status === "error" || status === "auth" || status === "upgrade" ? "border-red-500/40 bg-red-500/10" : "border-[var(--line)] bg-[var(--surface-2)]"}`} role="status">
+          <div className={`mt-5 rounded-lg border p-4 text-sm ${status === "error" || status === "auth" || status === "upgrade" ? "border-red-500/40 bg-red-500/10" : "border-[var(--line)] bg-[var(--surface-2)]"}`} role="status">
             <div className="flex items-start gap-2">
               {status === "error" || status === "auth" || status === "upgrade" ? <WarningCircle size={18} className="mt-0.5 shrink-0" weight="bold" /> : <FilmStrip size={18} className="mt-0.5 shrink-0 text-[var(--accent)]" weight="fill" />}
               <div className="flex-1">
@@ -296,7 +298,7 @@ export function RoomGenerator({ reuseId }: { reuseId?: string }) {
             </div>
           </div>
         ) : null}
-      </div>
+      </section>
     </div>
   );
 }
