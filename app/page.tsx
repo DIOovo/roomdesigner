@@ -19,7 +19,7 @@ type Plan = { name: "Free" | "Starter" | "Pro" | "Credit Pack"; price: string; n
 const plans: readonly Plan[] = [
   { name: "Free", price: "$0", note: "Two previews, first without login", features: ["2 total previews", "5-second video", "480p with watermark", "Personal use only"] },
   { name: "Starter", price: "$9.99", note: "per month", features: ["20 videos per month", "5-second HD video", "No watermark", "Personal use only"] },
-  { name: "Pro", price: "$24.99", note: "per month", features: ["60 videos per month", "Commercial license", "Priority queue", "Batch generation (coming later)"], featured: true },
+  { name: "Pro", price: "$24.99", note: "per month", features: ["60 videos per month", "5-second HD video", "No watermark", "Commercial license", "Priority queue"], featured: true },
   { name: "Credit Pack", price: "$19.99", note: "one-time", features: ["30 video credits", "5-second HD video", "Valid for one year", "No subscription"] },
 ];
 

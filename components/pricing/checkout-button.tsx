@@ -28,7 +28,7 @@ export function CheckoutButton({ plan, children, featured = false }: { plan: "st
       }}
       className={`focus-ring mt-7 w-full whitespace-nowrap rounded-xl px-4 py-3 text-sm font-black transition-transform active:scale-[.98] disabled:opacity-60 ${featured ? "bg-[var(--accent)] text-[var(--on-accent)]" : "border border-[var(--line)] bg-[var(--surface-2)] text-[var(--ink)]"}`}
     >
-      {!checkoutEnabled ? "Checkout coming soon" : loading ? "Opening checkout..." : authenticated === false ? "Get started" : children}
+      {!checkoutEnabled ? "Choose plan" : loading ? "Opening checkout..." : authenticated === false ? "Get started" : children}
     </button>
   );
 }

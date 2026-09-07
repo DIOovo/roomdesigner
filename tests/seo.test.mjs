@@ -74,7 +74,8 @@ test("production legal pages contain support, refund, privacy, and navigation di
   assert.doesNotMatch([contact, privacy, terms, refund, footer].join("\n"), /support@roomorphic\.com/i);
   assert.doesNotMatch(privacy, /must be finalized before launch|\bTODO\b|\bTBD\b/i);
   for (const heading of ["Third-Party Service Providers", "Cookies and Similar Technologies", "Your Privacy Rights", "International Data Transfers", "Children&apos;s Privacy"]) assert.match(privacy, new RegExp(heading));
-  for (const provider of ["Supabase", "Cloudflare", "fal.ai", "MiniMax", "Google", "Stripe", "Google Analytics", "Google AdSense", "Meta Pixel"]) assert.match(privacy, new RegExp(provider.replace(".", "\\.")));
+  for (const provider of ["Supabase", "Cloudflare", "fal.ai", "MiniMax", "Google", "Creem", "Google Analytics", "Google AdSense", "Meta Pixel"]) assert.match(privacy, new RegExp(provider.replace(".", "\\.")));
+  assert.doesNotMatch(privacy, /Stripe/);
   assert.match(privacy, /does not sell personal information/);
   assert.match(privacy, /California residents/);
   assert.match(privacy, /access to, correction of, or deletion/);
@@ -91,4 +92,19 @@ test("analytics is a consent-gated no-op and strips sensitive properties", () =>
   assert.equal(hasAnalyticsConsent({ getItem: () => "essential" }), false);
   assert.equal(hasAnalyticsConsent({ getItem: () => "accepted" }), true);
   assert.deepEqual(sanitizeAnalyticsProperties({ roomType: "Kitchen", style: "Japandi", email: "private@example.com", videoUrl: "https://private" }), { roomType: "Kitchen", style: "Japandi" });
+});
+
+test("public review copy names Creem and does not advertise planned Pro features", async () => {
+  const [privacy, refund, homepage, pricing, checkoutButton] = await Promise.all([
+    "app/privacy/page.tsx",
+    "app/refund/page.tsx",
+    "app/page.tsx",
+    "app/pricing/page.tsx",
+    "components/pricing/checkout-button.tsx",
+  ].map(read));
+  assert.match(privacy, /Creem/);
+  assert.match(privacy, /Merchant of Record/);
+  assert.doesNotMatch(privacy, /Stripe/);
+  assert.match(refund, /authorized payment provider or Merchant of Record/);
+  assert.doesNotMatch([homepage, pricing, checkoutButton].join("\n"), /Batch generation|planned for later|coming later|coming soon/i);
 });
