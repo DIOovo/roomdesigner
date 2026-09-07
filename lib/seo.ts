@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { siteConfig } from "@/lib/site";
 
-const socialImage = "/og-image.png";
-
 export function absoluteUrl(path = "/") {
   return new URL(path, `${siteConfig.url}/`).toString();
 }
@@ -29,13 +27,13 @@ export function publicPageMetadata({
       title,
       description,
       url,
-      images: [{ url: absoluteUrl(socialImage), width: 1200, height: 630, alt: "RoomFacelift AI room design before and after video" }],
+      images: [{ url: absoluteUrl(siteConfig.socialImagePath), width: 1200, height: 630, alt: "RoomFacelift AI room design before and after video" }],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: [absoluteUrl(socialImage)],
+      images: [absoluteUrl(siteConfig.socialImagePath)],
     },
   };
 }

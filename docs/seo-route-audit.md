@@ -1,6 +1,6 @@
 # SEO route audit
 
-Production origin: `https://roomorphic.com`
+Production origin: `https://roomfacelift.com`
 
 | Route | Indexing | Canonical | Notes |
 | --- | --- | --- | --- |
@@ -10,6 +10,7 @@ Production origin: `https://roomorphic.com`
 | `/contact` | index | `/contact` | Support and commercial inquiries |
 | `/privacy` | index | `/privacy` | Privacy, consent, and data processing |
 | `/terms` | index | `/terms` | Usage and commercial-license terms |
+| `/refund` | index | `/refund` | Digital generation, credit-pack, and subscription refunds |
 | `/blog` | index | `/blog` | Static blog index |
 | `/blog/ai-room-design` | index | same route | Supporting guide |
 | `/blog/ai-room-design-from-photo` | index | same route | Dedicated photo workflow article |

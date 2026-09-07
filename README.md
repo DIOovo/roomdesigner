@@ -2,7 +2,7 @@
 
 RoomFacelift is an AI room design tool that turns one room photo into a smooth before and after transformation video.
 
-Production domain: `https://roomorphic.com`
+Production domain: `https://roomfacelift.com`
 
 ## Local development
 
@@ -31,7 +31,7 @@ AFTER_IMAGE_PROVIDER=mock
 FAL_KEY=...
 FAL_H3_MODEL=minimax/h3-max/image-to-video
 FAL_H3_PROMPT_EXPANSION=balanced
-NEXT_PUBLIC_SITE_URL=https://roomorphic.com
+NEXT_PUBLIC_SITE_URL=https://roomfacelift.com
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 SUPABASE_SERVICE_ROLE_KEY=...
@@ -89,7 +89,7 @@ Never commit `.env.local` or secret values.
 
 ## SEO, analytics, and ads
 
-Public metadata, canonical URLs, sitemap entries, robots rules, and structured data use `NEXT_PUBLIC_SITE_URL`; production must set it to `https://roomorphic.com`. Optional integrations use `NEXT_PUBLIC_GA4_ID`, `NEXT_PUBLIC_META_PIXEL_ID`, and `NEXT_PUBLIC_ADSENSE_CLIENT_ID`. Missing IDs are safe no-ops, and configured scripts load only after the visitor accepts analytics consent.
+Public metadata, canonical URLs, sitemap entries, robots rules, and structured data use `NEXT_PUBLIC_SITE_URL`; production must set it to `https://roomfacelift.com`. Optional integrations use `NEXT_PUBLIC_GA4_ID`, `NEXT_PUBLIC_META_PIXEL_ID`, and `NEXT_PUBLIC_ADSENSE_CLIENT_ID`. Missing IDs are safe no-ops, and configured scripts load only after the visitor accepts analytics consent.
 
 Blog pages can reserve non-blocking ad placements. The homepage generator contains no ad placement. Private result pages remain `noindex, nofollow`; a future public-share result must use an explicit public token or public copy rather than exposing signed private assets.
 

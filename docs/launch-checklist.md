@@ -2,7 +2,7 @@
 
 ## Infrastructure
 
-- [ ] **BLOCKED / NOT TESTED:** Point `roomorphic.com` DNS to the production Cloudflare deployment.
+- [ ] **BLOCKED / NOT TESTED:** Point `roomfacelift.com` DNS to the production Cloudflare deployment.
 - [ ] **BLOCKED / NOT TESTED:** Confirm production HTTPS and redirects.
 - [ ] **BLOCKED / NOT TESTED:** Configure Cloudflare secrets from `.env.example`.
 - [ ] **BLOCKED / NOT TESTED:** Run Supabase migrations `001` through `004` against production.
@@ -13,7 +13,7 @@
 
 ## SEO and growth
 
-- [x] Production canonical URLs use `https://roomorphic.com`.
+- [x] Production canonical URLs use `https://roomfacelift.com`.
 - [x] Homepage, public pages, and articles have distinct metadata.
 - [x] Sitemap excludes auth, account, API, and private result routes.
 - [x] Robots rules allow public content and block private or utility routes.
@@ -27,6 +27,6 @@
 
 - [ ] **Pending provider decision:** choose Stripe, Creem, Paddle, or another payment provider in a separate Payment Gateway phase.
 - [ ] Enable checkout only after the selected production payment flow passes end-to-end testing.
-- [ ] Replace provisional retention language in the Privacy Policy with the approved production policy.
+- [x] Privacy Policy reflects the implemented storage behavior without claiming an unsupported fixed TTL.
 - [ ] Run the production smoke test: upload, generation, private result, download, auth, credit release, analytics consent, and mobile layout.
 - [ ] Confirm support mailbox monitoring and legal review before public launch.

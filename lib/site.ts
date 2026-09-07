@@ -1,6 +1,23 @@
+export const PRODUCTION_SITE_URL = "https://roomfacelift.com";
+
+export function resolveSiteUrl(configuredUrl = process.env.NEXT_PUBLIC_SITE_URL, environment = process.env.NODE_ENV) {
+  const candidate = configuredUrl?.trim().replace(/\/+$/, "");
+  if (!candidate) return PRODUCTION_SITE_URL;
+  try {
+    const parsed = new URL(candidate);
+    if (!['http:', 'https:'].includes(parsed.protocol)) return PRODUCTION_SITE_URL;
+    const isLocal = parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1" || parsed.hostname === "::1";
+    return environment === "production" && isLocal ? PRODUCTION_SITE_URL : candidate;
+  } catch {
+    return PRODUCTION_SITE_URL;
+  }
+}
+
 export const siteConfig = {
   name: "RoomFacelift",
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://roomorphic.com",
+  url: resolveSiteUrl(),
+  supportEmail: "support@roomfacelift.com",
+  socialImagePath: "/og-image.png",
   description:
     "Turn one room photo into a smooth AI before and after redesign video. Your first preview is free and works without login.",
 };
@@ -107,34 +124,48 @@ export const faqs = [
 ] as const;
 
 export function buildStructuredData() {
+  const organizationId = `${siteConfig.url}/#organization`;
+  const applicationId = `${siteConfig.url}/#web-application`;
+  const imageUrl = new URL(siteConfig.socialImagePath, `${siteConfig.url}/`).toString();
   return [
     {
       "@context": "https://schema.org",
       "@type": "WebApplication",
+      "@id": applicationId,
       name: siteConfig.name,
-      url: siteConfig.url,
+      url: `${siteConfig.url}/`,
+      image: imageUrl,
+      provider: { "@id": organizationId },
       applicationCategory: "DesignApplication",
       operatingSystem: "Web",
       description: siteConfig.description,
-      offers: { "@type": "Offer", price: "0", priceCurrency: "USD", description: "Limited first preview" },
+      offers: { "@type": "Offer", price: "0", priceCurrency: "USD", description: "Limited first preview", url: `${siteConfig.url}/#pricing` },
       featureList: ["AI room design from a photo", "Before and after transformation video", "No-login first preview"],
     },
     {
       "@context": "https://schema.org",
       "@type": "FAQPage",
+      "@id": `${siteConfig.url}/#faq`,
+      url: `${siteConfig.url}/`,
       mainEntity: faqs.map((faq) => ({ "@type": "Question", name: faq.question, acceptedAnswer: { "@type": "Answer", text: faq.answer } })),
     },
     {
       "@context": "https://schema.org",
       "@type": "HowTo",
+      "@id": `${siteConfig.url}/#how-to`,
+      url: `${siteConfig.url}/#how-it-works`,
       name: "How to create an AI room design video",
       step: howToSteps.map((step, index) => ({ "@type": "HowToStep", position: index + 1, name: step.name, text: step.text })),
     },
     {
       "@context": "https://schema.org",
       "@type": "Organization",
+      "@id": organizationId,
       name: siteConfig.name,
-      url: siteConfig.url,
+      url: `${siteConfig.url}/`,
+      logo: imageUrl,
+      image: imageUrl,
+      email: siteConfig.supportEmail,
     },
   ];
 }
