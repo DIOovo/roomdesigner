@@ -55,29 +55,44 @@ export function AuthForm({ mode, returnTo = "/#generator", initialMessage = "" }
     setPending("email");
     setMessage("");
     setShowResend(false);
-    const client = createBrowserClient(url, key);
-    if (mode === "signup") setSignupCooldown(5);
-    const confirmationRedirect = emailConfirmationRedirect(target);
-    const result = mode === "signup"
-      ? await client.auth.signUp({ email, password, options: { emailRedirectTo: confirmationRedirect } })
-      : await client.auth.signInWithPassword({ email, password });
-    if (result.error) {
-      const emailNotConfirmed = result.error.code === "email_not_confirmed" || /email not confirmed/i.test(result.error.message);
-      const rateLimited = result.error.code === "over_email_send_rate_limit" || /only request this after|rate limit/i.test(result.error.message);
-      setMessage(emailNotConfirmed ? "Email not confirmed." : rateLimited ? "Please wait a moment before trying again." : result.error.message);
-      setShowResend(emailNotConfirmed);
+    try {
+      const client = createBrowserClient(url, key);
+      const confirmationRedirect = emailConfirmationRedirect(target);
+      const result = mode === "signup"
+        ? await client.auth.signUp({ email, password, options: { emailRedirectTo: confirmationRedirect } })
+        : await client.auth.signInWithPassword({ email, password });
+
+      if (mode === "signup") logSignupResponse(result);
+
+      if (result.error) {
+        const emailNotConfirmed = result.error.code === "email_not_confirmed" || /email not confirmed/i.test(result.error.message);
+        const rateLimited = result.error.status === 429 || result.error.code === "over_email_send_rate_limit" || /only request this after|too many requests|rate limit/i.test(result.error.message);
+        if (mode === "signup" && rateLimited) setSignupCooldown(signupRateLimitCooldown(result.error.message));
+        setMessage(emailNotConfirmed ? "Email not confirmed." : result.error.message);
+        setShowResend(emailNotConfirmed);
+        setPending(null);
+        return;
+      }
+
+      if (mode === "signup") setSignupCooldown(5);
+      if (!result.data.session) {
+        setMessage("Check your email\nWe sent a confirmation link to your email address.");
+        setShowResend(mode === "signup");
+        setPending(null);
+        return;
+      }
+      await fetch("/api/auth/claim", { method: "POST" });
+      track(mode === "signup" ? "signup_completed" : "login_completed", { method: "password" });
+      window.location.assign(target);
+    } catch (error) {
+      if (mode === "signup" && process.env.NODE_ENV !== "production") {
+        console.warn("Supabase signup request failed", {
+          errorMessage: error instanceof Error ? error.message : "Unknown request failure",
+        });
+      }
+      setMessage("Unable to reach the authentication service. Please try again.");
       setPending(null);
-      return;
     }
-    if (!result.data.session) {
-      setMessage("Check your email to confirm your account, then sign in.");
-      setShowResend(mode === "signup");
-      setPending(null);
-      return;
-    }
-    await fetch("/api/auth/claim", { method: "POST" });
-    track(mode === "signup" ? "signup_completed" : "login_completed", { method: "password" });
-    window.location.assign(target);
   }
 
   async function resendConfirmation() {
@@ -106,11 +121,33 @@ export function AuthForm({ mode, returnTo = "/#generator", initialMessage = "" }
       <label className="grid gap-2 text-sm font-bold">Email address<input required autoComplete="email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" className="focus-ring h-12 rounded-lg border border-[var(--line)] bg-[var(--surface-2)] px-4 font-normal text-[var(--ink)] hover:border-[var(--accent)] placeholder:text-[var(--muted)]" /></label>
       <label className="grid gap-2 text-sm font-bold">Password<input required minLength={8} autoComplete={mode === "signup" ? "new-password" : "current-password"} type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="At least 8 characters" className="focus-ring h-12 rounded-lg border border-[var(--line)] bg-[var(--surface-2)] px-4 font-normal text-[var(--ink)] hover:border-[var(--accent)] placeholder:text-[var(--muted)]" /></label>
       <button disabled={pending !== null || (mode === "signup" && signupCooldown > 0)} className="focus-ring rounded-lg bg-[var(--accent)] px-5 py-3.5 font-black text-[var(--on-accent)] shadow-[0_10px_24px_rgba(18,75,55,.18)] hover:bg-[var(--accent-strong)] disabled:opacity-60 disabled:shadow-none">{pending === "email" ? "Please wait..." : mode === "signup" && signupCooldown > 0 ? `Try again in ${signupCooldown}s` : mode === "signup" ? "Create account" : "Sign in"}</button>
-      {message ? <p role="status" className="text-sm leading-6 text-[var(--muted)]">{message}</p> : null}
+      {message ? <p role="status" className="whitespace-pre-line text-sm leading-6 text-[var(--muted)]">{message}</p> : null}
       {showResend ? <button type="button" onClick={resendConfirmation} disabled={pending !== null || resendCooldown > 0} className="focus-ring justify-self-start text-sm font-bold text-[var(--accent)] underline disabled:text-[var(--muted)]">{pending === "resend" ? "Sending..." : resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend confirmation email"}</button> : null}
       <p className="text-sm text-[var(--muted)]">{mode === "signup" ? "Already have an account?" : "New to RoomFacelift?"} <Link className="font-bold text-[var(--accent)] underline" href={`${mode === "signup" ? "/login" : "/signup"}?next=${encodeURIComponent(target)}`}>{mode === "signup" ? "Sign in" : "Create one"}</Link></p>
     </form>
   );
+}
+
+function logSignupResponse(result: { data: { session: unknown }; error: { code?: string; message: string } | null }) {
+  if (process.env.NODE_ENV === "production") return;
+  if (result.error) {
+    console.warn("Supabase signup response", {
+      accepted: false,
+      errorCode: result.error.code ?? "unknown",
+      errorMessage: result.error.message,
+    });
+    return;
+  }
+  console.info("Supabase signup response", {
+    accepted: true,
+    confirmationRequired: !result.data.session,
+  });
+}
+
+function signupRateLimitCooldown(message: string) {
+  const retryDelay = message.match(/(?:after|in)\s+(\d+)\s*(?:seconds?|secs?|s)\b/i)?.[1];
+  if (!retryDelay) return 5;
+  return Math.max(1, Number(retryDelay));
 }
 
 function emailConfirmationRedirect(target: string) {
