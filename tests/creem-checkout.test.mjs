@@ -14,16 +14,15 @@ test("test checkout requires exact test mode and a case-insensitive server allow
   assert.equal(canUsePaymentTest("test@example.com", { ...allowed, PAYMENTS_TEST_MODE: "TRUE" }), false);
 });
 
-test("checkout route authenticates and enforces one-time product gates server-side", async () => {
+test("checkout route authenticates and keeps only the formal credit pack behind the public payment gate", async () => {
   const route = await read("app/api/creem/checkout/route.ts");
   const auth = route.indexOf("if (!user)");
   assert.ok(auth > -1 && auth < route.indexOf("PAYMENTS_LIVE"));
   assert.match(route, /status: 401/);
-  assert.match(route, /productKey !== "credits" && body\.productKey !== "test_credits"/);
-  assert.match(route, /productKey === "credits" && !isPaymentsLive\(process\.env\.PAYMENTS_LIVE\)/);
+  assert.match(route, /body\.productKey !== "credits"/);
+  assert.match(route, /if \(!isPaymentsLive\(process\.env\.PAYMENTS_LIVE\)\)/);
   assert.match(route, /Payments are temporarily unavailable\./);
-  assert.match(route, /productKey === "test_credits" && !canUsePaymentTest\(user\.email\)/);
-  assert.match(route, /status: 403/);
+  assert.doesNotMatch(route, /canUsePaymentTest|body\.productKey !== "test_credits"|productKey === "test_credits"/);
   assert.doesNotMatch(route, /body\.productKey === "(?:starter|pro)"/);
 });
 

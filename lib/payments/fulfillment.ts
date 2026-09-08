@@ -4,7 +4,7 @@ import { insertPaymentGrantOnce, oneTimeGrantKey, subscriptionGrantKey } from ".
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
 type Admin = NonNullable<ReturnType<typeof getSupabaseAdmin>>;
-export type PaymentProvider = "stripe" | "creem";
+export type PaymentProvider = "stripe" | "creem" | "waffo";
 
 type TrustedOrderInput = {
   userId: string;

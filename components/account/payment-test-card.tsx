@@ -10,14 +10,15 @@ export function PaymentTestCard() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch("/api/creem/checkout", {
+      const response = await fetch("/api/waffo/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ productKey: "test_credits" }),
       });
       const data = await response.json() as { checkoutUrl?: string; error?: string };
       if (!response.ok || !data.checkoutUrl) throw new Error(data.error ?? "Checkout is temporarily unavailable.");
-      window.location.assign(data.checkoutUrl);
+      window.open(data.checkoutUrl, "_blank", "noopener,noreferrer");
+      setLoading(false);
     } catch (error) {
       setError(error instanceof Error ? error.message : "Checkout is temporarily unavailable.");
       setLoading(false);

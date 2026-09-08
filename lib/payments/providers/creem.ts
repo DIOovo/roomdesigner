@@ -16,7 +16,7 @@ export function createCheckoutRequestId(userId: string, productKey: string, now 
 export async function createCreemCheckout(input: {
   userId: string;
   email: string;
-  productKey: "credits" | "test_credits";
+  productKey: "credits";
   productId: string;
   successUrl: string;
   requestId: string;

@@ -1,11 +1,10 @@
+import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
-import { isPaymentsLive } from "@/lib/payments/availability";
-import { getCreemProductId } from "@/lib/payments/catalog";
-import { createCheckoutRequestId, createCreemCheckout } from "@/lib/payments/providers/creem";
+import { canUsePaymentTest } from "@/lib/payments/availability";
+import { getWaffoProductId } from "@/lib/payments/catalog";
+import { createWaffoCheckout } from "@/lib/payments/providers/waffo";
 import { resolveSiteUrl } from "@/lib/site";
 import { getSupabaseServer } from "@/lib/supabase/server";
-
-type CheckoutProduct = "credits";
 
 export async function POST(request: Request) {
   const supabase = await getSupabaseServer();
@@ -18,30 +17,29 @@ export async function POST(request: Request) {
   if (!body || Array.isArray(body) || Object.keys(body).some((key) => key !== "productKey")) {
     return NextResponse.json({ error: "Only productKey is accepted." }, { status: 400 });
   }
-  if (body.productKey !== "credits") {
-    return NextResponse.json({ error: "This product is not available through Creem checkout." }, { status: 400 });
+  if (body.productKey !== "test_credits") {
+    return NextResponse.json({ error: "This product is not available through Waffo checkout." }, { status: 400 });
   }
-  const productKey: CheckoutProduct = body.productKey;
-  if (!isPaymentsLive(process.env.PAYMENTS_LIVE)) {
-    return NextResponse.json({ error: "Payments are temporarily unavailable." }, { status: 503 });
+  if (!canUsePaymentTest(user.email)) {
+    return NextResponse.json({ error: "Payment testing is not available for this account." }, { status: 403 });
   }
   if (!user.email) return NextResponse.json({ error: "A verified account email is required for checkout." }, { status: 400 });
 
   try {
-    const productId = getCreemProductId(productKey);
-    const requestId = createCheckoutRequestId(user.id, productKey);
-    const checkout = await createCreemCheckout({
+    const productId = getWaffoProductId("test_credits");
+    const checkoutReference = `roomfacelift-${randomUUID()}`;
+    const checkout = await createWaffoCheckout({
       userId: user.id,
       email: user.email,
-      productKey,
       productId,
-      requestId,
+      productKey: "test_credits",
+      checkoutReference,
       successUrl: `${resolveSiteUrl()}/account?checkout=success`,
     });
-    console.info("Creem checkout created", { checkoutId: checkout.id, productKey, userId: user.id, requestId: checkout.requestId });
+    console.info("Waffo checkout created", { checkoutId: checkout.sessionId, productKey: "test_credits", userId: user.id, checkoutReference });
     return NextResponse.json({ checkoutUrl: checkout.checkoutUrl });
   } catch (error) {
-    console.error("Creem checkout creation failed", { productKey, userId: user.id, reason: error instanceof Error ? error.message : "unknown" });
+    console.error("Waffo checkout creation failed", { productKey: "test_credits", userId: user.id, reason: error instanceof Error ? error.message : "unknown" });
     return NextResponse.json({ error: "Checkout is temporarily unavailable." }, { status: 503 });
   }
 }

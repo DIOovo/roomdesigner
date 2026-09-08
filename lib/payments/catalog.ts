@@ -12,6 +12,7 @@ export const paymentCatalog = {
     commercialLicense: false,
     priorityQueue: false,
     creemProductEnv: "CREEM_PRODUCT_STARTER",
+    waffoProductEnv: null,
     testOnly: false,
   },
   pro: {
@@ -23,6 +24,7 @@ export const paymentCatalog = {
     commercialLicense: true,
     priorityQueue: true,
     creemProductEnv: "CREEM_PRODUCT_PRO",
+    waffoProductEnv: null,
     testOnly: false,
   },
   credits: {
@@ -34,6 +36,7 @@ export const paymentCatalog = {
     commercialLicense: false,
     priorityQueue: false,
     creemProductEnv: "CREEM_PRODUCT_CREDIT_PACK",
+    waffoProductEnv: null,
     testOnly: false,
   },
   test_credits: {
@@ -45,6 +48,7 @@ export const paymentCatalog = {
     commercialLicense: false,
     priorityQueue: false,
     creemProductEnv: "CREEM_PRODUCT_TEST_CREDITS",
+    waffoProductEnv: "WAFFO_PRODUCT_TEST_CREDITS",
     testOnly: true,
   },
 } as const satisfies Record<PaymentProductKey, {
@@ -54,6 +58,7 @@ export const paymentCatalog = {
   commercialLicense: boolean;
   priorityQueue: boolean;
   creemProductEnv: string;
+  waffoProductEnv: string | null;
   testOnly: boolean;
   interval?: "month";
   creditsPerPeriod?: number;
@@ -89,6 +94,22 @@ export function getPaymentProductKeyByCreemId(productId: string, env: NodeJS.Pro
   const matches = paymentProductKeys.filter((key) => {
     const configured = env[paymentCatalog[key].creemProductEnv]?.trim();
     return configured && configured === productId;
+  });
+  return matches.length === 1 ? matches[0] : null;
+}
+
+export function getWaffoProductId(key: PaymentProductKey, env: NodeJS.ProcessEnv = process.env) {
+  const product = getEnabledPaymentProduct(key, env.PAYMENTS_TEST_MODE);
+  if (!product.waffoProductEnv) throw new Error("The requested product is not available through Waffo checkout.");
+  const productId = env[product.waffoProductEnv]?.trim();
+  if (!productId) throw new Error(`${product.waffoProductEnv} is not configured.`);
+  return productId;
+}
+
+export function getPaymentProductKeyByWaffoId(productId: string, env: NodeJS.ProcessEnv = process.env) {
+  const matches = paymentProductKeys.filter((key) => {
+    const envName = paymentCatalog[key].waffoProductEnv;
+    return envName && env[envName]?.trim() === productId;
   });
   return matches.length === 1 ? matches[0] : null;
 }
