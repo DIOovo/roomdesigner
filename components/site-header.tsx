@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BrandLogo } from "@/components/brand-logo";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { getUserEntitlements } from "@/lib/entitlements/server";
 import type { RoomFaceliftPlan } from "@/lib/entitlements/types";
@@ -11,8 +12,8 @@ export async function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-[color:var(--line)]/85 bg-[color:var(--bg)]/88 backdrop-blur-xl">
       <div className="shell flex h-[4.5rem] items-center justify-between gap-5">
-        <Link href="/" className="focus-ring rounded-sm text-xl font-black tracking-[-0.025em]">
-          RoomFacelift<span className="text-[var(--accent)]">.</span>
+        <Link href="/" aria-label="RoomFacelift home" className="focus-ring group shrink-0 rounded-[10px]">
+          <BrandLogo />
         </Link>
         <nav aria-label="Main navigation" className="hidden items-center gap-8 text-sm font-semibold text-[var(--muted)] md:flex">
           <Link href="/#examples" className="focus-ring rounded-sm hover:text-[var(--ink)]">Examples</Link>
