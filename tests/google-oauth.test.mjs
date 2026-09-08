@@ -35,7 +35,7 @@ test("OAuth callback exchanges the code, uses Supabase user id, claims anonymous
   assert.match(callback, /userId: result\.data\.user\.id/);
   assert.match(callback, /claimAnonymousUsage/);
   assert.match(callback, /NextResponse\.redirect\(new URL\(next, url\.origin\)\)/);
-  assert.match(callback, /login\.searchParams\.set\("error", "oauth_failed"\)/);
+  assert.match(callback, /"confirmation_failed" : "oauth_failed"/);
   assert.doesNotMatch(callback, /access_token|localStorage|GOOGLE_CLIENT_SECRET/);
 });
 

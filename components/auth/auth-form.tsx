@@ -1,17 +1,33 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 import { googleOAuthRequest, safeReturnTo } from "@/lib/auth/redirect";
 import { track } from "@/lib/analytics/events";
+import { resolveSiteUrl } from "@/lib/site";
 
 export function AuthForm({ mode, returnTo = "/#generator", initialMessage = "" }: { mode: "login" | "signup"; returnTo?: string; initialMessage?: string }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState(initialMessage);
-  const [pending, setPending] = useState<"google" | "email" | null>(null);
+  const [pending, setPending] = useState<"google" | "email" | "resend" | null>(null);
+  const [signupCooldown, setSignupCooldown] = useState(0);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [showResend, setShowResend] = useState(false);
   const target = safeReturnTo(returnTo);
+
+  useEffect(() => {
+    if (signupCooldown <= 0) return;
+    const timer = window.setTimeout(() => setSignupCooldown((seconds) => Math.max(0, seconds - 1)), 1_000);
+    return () => window.clearTimeout(timer);
+  }, [signupCooldown]);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = window.setTimeout(() => setResendCooldown((seconds) => Math.max(0, seconds - 1)), 1_000);
+    return () => window.clearTimeout(timer);
+  }, [resendCooldown]);
 
   async function continueWithGoogle() {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -38,23 +54,46 @@ export function AuthForm({ mode, returnTo = "/#generator", initialMessage = "" }
     if (!url || !key) { setMessage("Supabase Auth is not configured in this environment."); return; }
     setPending("email");
     setMessage("");
+    setShowResend(false);
     const client = createBrowserClient(url, key);
+    if (mode === "signup") setSignupCooldown(5);
+    const confirmationRedirect = emailConfirmationRedirect(target);
     const result = mode === "signup"
-      ? await client.auth.signUp({ email, password, options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(target)}` } })
+      ? await client.auth.signUp({ email, password, options: { emailRedirectTo: confirmationRedirect } })
       : await client.auth.signInWithPassword({ email, password });
     if (result.error) {
-      setMessage(result.error.message);
+      const emailNotConfirmed = result.error.code === "email_not_confirmed" || /email not confirmed/i.test(result.error.message);
+      const rateLimited = result.error.code === "over_email_send_rate_limit" || /only request this after|rate limit/i.test(result.error.message);
+      setMessage(emailNotConfirmed ? "Email not confirmed." : rateLimited ? "Please wait a moment before trying again." : result.error.message);
+      setShowResend(emailNotConfirmed);
       setPending(null);
       return;
     }
     if (!result.data.session) {
       setMessage("Check your email to confirm your account, then sign in.");
+      setShowResend(mode === "signup");
       setPending(null);
       return;
     }
     await fetch("/api/auth/claim", { method: "POST" });
     track(mode === "signup" ? "signup_completed" : "login_completed", { method: "password" });
     window.location.assign(target);
+  }
+
+  async function resendConfirmation() {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!url || !key || !email || resendCooldown > 0) return;
+    setPending("resend");
+    setResendCooldown(10);
+    const client = createBrowserClient(url, key);
+    const result = await client.auth.resend({
+      type: "signup",
+      email,
+      options: { emailRedirectTo: emailConfirmationRedirect(target) },
+    });
+    setMessage(result.error ? (/only request this after|rate limit/i.test(result.error.message) ? "Please wait a moment before trying again." : "Unable to resend confirmation email. Please try again.") : "Confirmation email sent.");
+    setPending(null);
   }
 
   return (
@@ -66,11 +105,18 @@ export function AuthForm({ mode, returnTo = "/#generator", initialMessage = "" }
       <p className="text-sm font-black">Continue with email</p>
       <label className="grid gap-2 text-sm font-bold">Email address<input required autoComplete="email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" className="focus-ring h-12 rounded-lg border border-[var(--line)] bg-[var(--surface-2)] px-4 font-normal text-[var(--ink)] hover:border-[var(--accent)] placeholder:text-[var(--muted)]" /></label>
       <label className="grid gap-2 text-sm font-bold">Password<input required minLength={8} autoComplete={mode === "signup" ? "new-password" : "current-password"} type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="At least 8 characters" className="focus-ring h-12 rounded-lg border border-[var(--line)] bg-[var(--surface-2)] px-4 font-normal text-[var(--ink)] hover:border-[var(--accent)] placeholder:text-[var(--muted)]" /></label>
-      <button disabled={pending !== null} className="focus-ring rounded-lg bg-[var(--accent)] px-5 py-3.5 font-black text-[var(--on-accent)] shadow-[0_10px_24px_rgba(18,75,55,.18)] hover:bg-[var(--accent-strong)] disabled:opacity-60 disabled:shadow-none">{pending === "email" ? "Please wait..." : mode === "signup" ? "Create account" : "Sign in"}</button>
+      <button disabled={pending !== null || (mode === "signup" && signupCooldown > 0)} className="focus-ring rounded-lg bg-[var(--accent)] px-5 py-3.5 font-black text-[var(--on-accent)] shadow-[0_10px_24px_rgba(18,75,55,.18)] hover:bg-[var(--accent-strong)] disabled:opacity-60 disabled:shadow-none">{pending === "email" ? "Please wait..." : mode === "signup" && signupCooldown > 0 ? `Try again in ${signupCooldown}s` : mode === "signup" ? "Create account" : "Sign in"}</button>
       {message ? <p role="status" className="text-sm leading-6 text-[var(--muted)]">{message}</p> : null}
+      {showResend ? <button type="button" onClick={resendConfirmation} disabled={pending !== null || resendCooldown > 0} className="focus-ring justify-self-start text-sm font-bold text-[var(--accent)] underline disabled:text-[var(--muted)]">{pending === "resend" ? "Sending..." : resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend confirmation email"}</button> : null}
       <p className="text-sm text-[var(--muted)]">{mode === "signup" ? "Already have an account?" : "New to RoomFacelift?"} <Link className="font-bold text-[var(--accent)] underline" href={`${mode === "signup" ? "/login" : "/signup"}?next=${encodeURIComponent(target)}`}>{mode === "signup" ? "Sign in" : "Create one"}</Link></p>
     </form>
   );
+}
+
+function emailConfirmationRedirect(target: string) {
+  const callback = new URL("/auth/callback", resolveSiteUrl(process.env.NEXT_PUBLIC_SITE_URL, process.env.NODE_ENV));
+  callback.searchParams.set("next", safeReturnTo(target));
+  return callback.toString();
 }
 
 function GoogleMark() {

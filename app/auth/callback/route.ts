@@ -6,14 +6,20 @@ import { claimAnonymousUsage } from "@/lib/credits/claim-anonymous";
 import { readAnonymousUsage } from "@/lib/credits/anonymous";
 import { getSupabaseServer } from "@/lib/supabase/server";
 
+type ConfirmationOtpType = "signup" | "email";
+
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
+  const tokenHash = url.searchParams.get("token_hash");
+  const otpType = confirmationOtpType(url.searchParams.get("type"));
   const next = safeReturnTo(url.searchParams.get("next"));
   const client = await getSupabaseServer();
-  if (code && client) {
+  if (client && (code || (tokenHash && otpType))) {
     try {
-      const result = await client.auth.exchangeCodeForSession(code);
+      const result = code
+        ? await client.auth.exchangeCodeForSession(code)
+        : await client.auth.verifyOtp({ token_hash: tokenHash as string, type: otpType as ConfirmationOtpType });
       if (!result.error && result.data.user) {
         const store = await cookies();
         const anonymous = readAnonymousIdentity(store.get(ANONYMOUS_COOKIE)?.value);
@@ -37,7 +43,11 @@ export async function GET(request: Request) {
     }
   }
   const login = new URL("/login", url.origin);
-  login.searchParams.set("error", "oauth_failed");
+  login.searchParams.set("error", tokenHash || !code ? "confirmation_failed" : "oauth_failed");
   login.searchParams.set("next", next);
   return NextResponse.redirect(login);
+}
+
+function confirmationOtpType(value: string | null): ConfirmationOtpType | null {
+  return value === "signup" || value === "email" ? value : null;
 }
