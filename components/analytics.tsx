@@ -1,12 +1,16 @@
 "use client";
 
 import Script from "next/script";
-import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { CONSENT_EVENT, CONSENT_KEY, type ConsentChoice } from "@/lib/analytics/consent";
 
 export function Analytics() {
   const [consent, setConsent] = useState<ConsentChoice>("unknown");
-  const ga = process.env.NEXT_PUBLIC_GA4_ID;
+  const pathname = usePathname();
+  const isFirstNavigation = useRef(true);
+  const isProd = process.env.NODE_ENV === "production";
+  const ga = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
   const pixel = process.env.NEXT_PUBLIC_META_PIXEL_ID;
   const adsense = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID;
 
@@ -18,10 +22,26 @@ export function Analytics() {
     return () => window.removeEventListener(CONSENT_EVENT, update);
   }, []);
 
+  useEffect(() => {
+    // The initial load page_view is emitted by gtag("config"). Only track
+    // subsequent client-side navigations to avoid double counting.
+    if (isFirstNavigation.current) {
+      isFirstNavigation.current = false;
+      return;
+    }
+    const gtagFn = window.gtag;
+    if (typeof gtagFn !== "function") return;
+    gtagFn("event", "page_view", {
+      page_path: pathname,
+      page_location: window.location.href,
+      page_title: document.title,
+    });
+  }, [pathname]);
+
   return (
     <>
       <CookieConsent choice={consent} onChoice={setConsent} />
-      {consent === "accepted" && ga ? (
+      {consent === "accepted" && isProd && ga ? (
         <>
           <Script src={`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(ga)}`} strategy="afterInteractive" />
           <Script id="ga4" strategy="afterInteractive">{`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config',${JSON.stringify(ga)},{anonymize_ip:true});`}</Script>

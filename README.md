@@ -89,7 +89,7 @@ Never commit `.env.local` or secret values.
 
 ## SEO, analytics, and ads
 
-Public metadata, canonical URLs, sitemap entries, robots rules, and structured data use `NEXT_PUBLIC_SITE_URL`; production must set it to `https://roomfacelift.com`. Optional integrations use `NEXT_PUBLIC_GA4_ID`, `NEXT_PUBLIC_META_PIXEL_ID`, and `NEXT_PUBLIC_ADSENSE_CLIENT_ID`. Missing IDs are safe no-ops, and configured scripts load only after the visitor accepts analytics consent.
+Public metadata, canonical URLs, sitemap entries, robots rules, and structured data use `NEXT_PUBLIC_SITE_URL`; production must set it to `https://roomfacelift.com`. Optional integrations use `NEXT_PUBLIC_GA_MEASUREMENT_ID`, `NEXT_PUBLIC_META_PIXEL_ID`, and `NEXT_PUBLIC_ADSENSE_CLIENT_ID`. Missing IDs are safe no-ops, and configured scripts load only after the visitor accepts analytics consent.
 
 Blog pages can reserve non-blocking ad placements. The homepage generator contains no ad placement. Private result pages remain `noindex, nofollow`; a future public-share result must use an explicit public token or public copy rather than exposing signed private assets.
 
