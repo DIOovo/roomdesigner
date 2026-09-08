@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { ANONYMOUS_COOKIE, anonymousStorageId, createAnonymousIdentity, readAnonymousIdentity } from "@/lib/auth/anonymous";
-import { persistInputFrame } from "@/lib/assets/frame-assets";
+import { resolveSubmittedInputFrame } from "@/lib/assets/frame-assets";
 import { claimAnonymousUsage } from "@/lib/credits/claim-anonymous";
 import { readAnonymousUsage } from "@/lib/credits/anonymous";
 import { releaseGenerationCredit, reserveGenerationCredit } from "@/lib/credits/reservations";
@@ -18,15 +18,17 @@ export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   try {
-    const form = await request.formData();
-    const file = form.get("image");
-    const sample = String(form.get("sample") ?? "");
-    const roomType = String(form.get("roomType") ?? "Living Room");
-    const style = String(form.get("style") ?? "Japandi");
-    const designScope = parseRequestedDesignScope(form.get("designScope"));
-    const clientRequestId = String(form.get("clientRequestId") ?? "");
+    if (!request.headers.get("content-type")?.includes("application/json")) {
+      return NextResponse.json({ error: "Generation requests must use JSON." }, { status: 415 });
+    }
+    const body = await request.json() as { imageUrl?: unknown; roomType?: unknown; style?: unknown; scope?: unknown };
+    const imageUrl = typeof body.imageUrl === "string" ? body.imageUrl : "";
+    const roomType = typeof body.roomType === "string" ? body.roomType : "Living Room";
+    const style = typeof body.style === "string" ? body.style : "Japandi";
+    const designScope = parseRequestedDesignScope(body.scope);
+    const clientRequestId = request.headers.get("idempotency-key") ?? "";
     if (!designScope) return NextResponse.json({ error: "Choose a valid design scope." }, { status: 400 });
-    const validation = validateInput(file, sample, clientRequestId);
+    const validation = validateInput(imageUrl, clientRequestId);
     if (validation) return NextResponse.json({ error: validation }, { status: 400 });
 
     const serverClient = await getSupabaseServer();
@@ -51,7 +53,8 @@ export async function POST(request: Request) {
 
     if (!admin) {
       if (!isMock) return NextResponse.json({ error: "Supabase must be configured before real generation can start." }, { status: 503 });
-      return createStatelessMockJob({ roomType, style, designScope, sample, anonymousToken });
+      if (!imageUrl.startsWith("/samples/")) return NextResponse.json({ error: "Photo uploads require Supabase Storage." }, { status: 503 });
+      return createStatelessMockJob({ roomType, style, designScope, imageUrl, anonymousToken });
     }
 
     const existing = await getJobByRequestKey(requestKey);
@@ -61,7 +64,7 @@ export async function POST(request: Request) {
     if (user && (await getUserEntitlements(user.id)).totalCreditsRemaining <= 0) return upgradeRequired();
 
     const jobId = crypto.randomUUID();
-    const firstFrame = await persistInputFrame({ admin, file: file instanceof File ? file : undefined, samplePath: sample || undefined, ownerId, jobId });
+    const firstFrame = await resolveSubmittedInputFrame({ admin, imageUrl, ownerId });
     const inserted = await admin.from("generation_jobs").insert({
       id: jobId,
       user_id: user?.id ?? null,
@@ -119,9 +122,9 @@ export async function POST(request: Request) {
   }
 }
 
-function createStatelessMockJob(input: { roomType: string; style: string; designScope: DesignScope; sample: string; anonymousToken?: string }) {
+function createStatelessMockJob(input: { roomType: string; style: string; designScope: DesignScope; imageUrl: string; anonymousToken?: string }) {
   const jobId = crypto.randomUUID();
-  const firstFrame = input.sample || "/samples/living-before.jpg";
+  const firstFrame = input.imageUrl || "/samples/living-before.jpg";
   const response = NextResponse.json({ jobId, status: "queued", stage: "queued", creditSource: "free", plan: "free" }, { status: 202 });
   response.cookies.set(MOCK_JOB_COOKIE, createMockJobToken({ id: jobId, createdAt: Date.now(), roomType: input.roomType, style: input.style, designScope: input.designScope, firstFrame, lastFrame: mockAfterPath(input.roomType) }), cookieOptions(60 * 30));
   if (input.anonymousToken) response.cookies.set(ANONYMOUS_COOKIE, input.anonymousToken, cookieOptions(60 * 60 * 24 * 365));
@@ -131,13 +134,10 @@ function createStatelessMockJob(input: { roomType: string; style: string; design
 function authRequired() { return NextResponse.json({ error: "Sign in to use your second free preview.", requiresAuth: true }, { status: 401 }); }
 function upgradeRequired() { return NextResponse.json({ error: "No generation credits remaining.", requiresUpgrade: true }, { status: 402 }); }
 
-function validateInput(file: FormDataEntryValue | null, sample: string, requestId: string) {
+function validateInput(imageUrl: string, requestId: string) {
   if (!requestId || requestId.length > 128 || !/^[a-zA-Z0-9_-]+$/.test(requestId)) return "A valid client request ID is required.";
-  if (file instanceof File) {
-    if (!["image/png", "image/jpeg"].includes(file.type)) return "Only PNG and JPG images are accepted.";
-    if (file.size > 10 * 1024 * 1024) return "The image must be 10MB or smaller.";
-    if (file.size === 0) return "The uploaded image is empty.";
-  } else if (!sample.startsWith("/samples/") || sample.includes("..")) return "Please upload a room photo or choose a valid sample.";
+  if (!imageUrl || imageUrl.length > 4096 || imageUrl.startsWith("data:") || imageUrl.includes("base64,")) return "Please upload a room photo or choose a valid sample.";
+  if (imageUrl.startsWith("/samples/") && imageUrl.includes("..")) return "Please choose a valid sample.";
   return null;
 }
 

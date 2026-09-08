@@ -75,7 +75,7 @@ test("mock and remote After Image providers remain compatible without replacing 
 
 test("new jobs persist design_scope and stateless jobs snapshot it", () => {
   const create = source("app/api/generate/route.ts");
-  assert.match(create, /parseRequestedDesignScope\(form\.get\("designScope"\)\)/);
+  assert.match(create, /parseRequestedDesignScope\(body\.scope\)/);
   assert.match(create, /design_scope: designScope/);
   assert.match(create, /designScope: input\.designScope/);
   assert.match(create, /Choose a valid design scope\./);
@@ -97,7 +97,7 @@ test("owned history reuse returns and restores design scope without generation o
   assert.match(reuse, /designScope: normalizeStoredDesignScope\(job\.design_scope\)/);
   assert.doesNotMatch(reuse, /reserveGenerationCredit|generateAfterFrame|getVideoGateway/);
   assert.match(generator, /setDesignScope\(data\.designScope\)/);
-  assert.match(generator, /body\.append\("designScope", designScope\)/);
+  assert.match(generator, /JSON\.stringify\(\{ imageUrl, roomType: room, style, scope: designScope \}\)/);
   assert.match(generator, /onClick=\{handlePrimaryAction\}/);
 });
 

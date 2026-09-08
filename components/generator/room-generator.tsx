@@ -8,6 +8,7 @@ import { roomTypes, samples, styles } from "@/lib/site";
 import { track } from "@/lib/analytics/events";
 import type { CreditSource, UserEntitlements } from "@/lib/entitlements/types";
 import { isDesignScope, type DesignScope } from "@/lib/generation/design-scope";
+import { ApiResponseError, readApiResponse } from "@/lib/http/client-response";
 
 type Status = "idle" | "queued" | "processing" | "error" | "auth" | "upgrade";
 
@@ -24,6 +25,7 @@ type JobResponse = {
 };
 
 type ReuseResponse = { roomType?: string; style?: string; designScope?: string; error?: string };
+type UploadResponse = { path: string; signedUrl: string; imageUrl?: string; error?: string; requiresAuth?: boolean; requiresUpgrade?: boolean };
 
 export function RoomGenerator({ reuseId }: { reuseId?: string }) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -43,7 +45,7 @@ export function RoomGenerator({ reuseId }: { reuseId?: string }) {
   const selectedStyleLabel = styles.find((item) => item.name === style)?.name ?? style;
 
   useEffect(() => {
-    fetch("/api/entitlements", { cache: "no-store" }).then((response) => response.json()).then((data: UserEntitlements) => setEntitlements(data)).catch(() => undefined);
+    fetch("/api/entitlements", { cache: "no-store" }).then((response) => readApiResponse<UserEntitlements>(response, "Credits could not be loaded.")).then(setEntitlements).catch(() => undefined);
     return () => pollController.current?.abort();
   }, []);
 
@@ -53,8 +55,7 @@ export function RoomGenerator({ reuseId }: { reuseId?: string }) {
     setReuseMessage("Restoring your previous settings...");
     fetch(`/api/generations/${encodeURIComponent(reuseId)}/reuse`, { cache: "no-store", signal: controller.signal })
       .then(async (response) => {
-        const data = (await response.json()) as ReuseResponse;
-        if (!response.ok) throw new Error(data.error ?? "Previous settings could not be restored.");
+        const data = await readApiResponse<ReuseResponse>(response, "Previous settings could not be restored.");
         if (!data.roomType || !roomTypes.includes(data.roomType as (typeof roomTypes)[number]) || !data.style || !styles.some((item) => item.name === data.style) || !isDesignScope(data.designScope)) {
           throw new Error("Previous settings are no longer available.");
         }
@@ -121,35 +122,35 @@ export function RoomGenerator({ reuseId }: { reuseId?: string }) {
     setMessage("Preparing your room...");
     track("generate_started", { roomType: room, style });
     try {
-      const body = new FormData();
-      if (file) body.append("image", file);
-      body.append("sample", file ? "" : preview);
-      body.append("roomType", room);
-      body.append("style", style);
-      body.append("designScope", designScope);
-      body.append("clientRequestId", crypto.randomUUID());
-      const response = await fetch("/api/generate", { method: "POST", body, signal: controller.signal });
-      const data = (await response.json()) as JobResponse;
-      if (data.requiresAuth) {
-        setStatus("auth");
-        setMessage(data.error ?? "Sign in to use your second free preview.");
-        track("login_required", { source: "generation_api" });
-        requestInFlight.current = false;
-        return;
-      }
-      if (data.requiresUpgrade) {
-        setStatus("upgrade");
-        setMessage(data.error ?? "No generation credits remaining.");
-        track("upgrade_required");
-        requestInFlight.current = false;
-        return;
-      }
-      if (!response.ok || !data.jobId) throw new Error(data.error ?? "Generation could not start.");
+      const imageUrl = file ? await uploadRoomImage(file, controller.signal, setMessage) : preview;
+      setMessage("Starting your generation...");
+      const response = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "content-type": "application/json", "idempotency-key": crypto.randomUUID() },
+        body: JSON.stringify({ imageUrl, roomType: room, style, scope: designScope }),
+        signal: controller.signal,
+      });
+      const data = await readApiResponse<JobResponse>(response, "Generation could not start.");
+      if (!data.jobId) throw new Error(data.error ?? "Generation could not start.");
       reservedSource.current = data.creditSource ?? null;
       track("credit_reserved", { source: data.creditSource ?? "unknown" });
       await pollJob(data.jobId, controller.signal);
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
+      if (error instanceof ApiResponseError && error.payload.requiresAuth) {
+        setStatus("auth");
+        setMessage(error.message);
+        track("login_required", { source: "generation_api" });
+        requestInFlight.current = false;
+        return;
+      }
+      if (error instanceof ApiResponseError && error.payload.requiresUpgrade) {
+        setStatus("upgrade");
+        setMessage(error.message);
+        track("upgrade_required");
+        requestInFlight.current = false;
+        return;
+      }
       setStatus("error");
       setStage("failed");
       setMessage(error instanceof Error ? error.message : "Generation failed. Please try again.");
@@ -161,8 +162,7 @@ export function RoomGenerator({ reuseId }: { reuseId?: string }) {
   async function pollJob(jobId: string, signal: AbortSignal) {
     while (!signal.aborted) {
       const response = await fetch(`/api/generations/${jobId}`, { cache: "no-store", signal });
-      const job = (await response.json()) as JobResponse;
-      if (!response.ok) throw new Error(job.error ?? "Generation status could not be loaded.");
+      const job = await readApiResponse<JobResponse>(response, "Generation status could not be loaded.");
       setStage(job.stage);
       setMessage(job.message ?? "Preparing your room...");
       setStatus(job.status === "queued" ? "queued" : "processing");
@@ -306,6 +306,46 @@ export function RoomGenerator({ reuseId }: { reuseId?: string }) {
 function generateLabel(entitlements: UserEntitlements | null) {
   if (!entitlements || entitlements.totalCreditsRemaining > 0) return "Generate";
   return entitlements.authenticated ? "Upgrade to generate" : "Sign in to generate";
+}
+
+async function uploadRoomImage(file: File, signal: AbortSignal, setMessage: (message: string) => void) {
+  setMessage("Uploading your room photo...");
+  const prepareResponse = await fetch("/api/uploads/room-image", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ contentType: file.type, size: file.size }),
+    signal,
+  });
+  const prepared = await readApiResponse<UploadResponse>(prepareResponse, "The room photo upload could not be prepared.");
+  const uploadBody = new FormData();
+  uploadBody.append("cacheControl", "3600");
+  uploadBody.append("", file);
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const uploaded = await fetch(prepared.signedUrl, {
+    method: "PUT",
+    headers: {
+      "x-upsert": "false",
+      ...(anonKey ? { apikey: anonKey, authorization: `Bearer ${anonKey}` } : {}),
+    },
+    body: uploadBody,
+    signal,
+  });
+  if (!uploaded.ok) {
+    await uploaded.text().catch(() => "");
+    if (uploaded.status === 413) throw new Error("That image is over 10MB. Please choose a smaller file.");
+    throw new Error("The room photo could not be uploaded. Check your connection and try again.");
+  }
+
+  setMessage("Checking your room photo...");
+  const completeResponse = await fetch("/api/uploads/room-image", {
+    method: "PATCH",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ path: prepared.path }),
+    signal,
+  });
+  const completed = await readApiResponse<UploadResponse>(completeResponse, "The room photo upload could not be completed.");
+  if (!completed.imageUrl) throw new Error("The room photo upload could not be completed.");
+  return completed.imageUrl;
 }
 
 function creditLabel(entitlements: UserEntitlements) {
