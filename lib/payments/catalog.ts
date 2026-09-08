@@ -12,7 +12,7 @@ export const paymentCatalog = {
     commercialLicense: false,
     priorityQueue: false,
     creemProductEnv: "CREEM_PRODUCT_STARTER",
-    waffoProductEnv: null,
+    waffoProductEnv: "WAFFO_PRODUCT_STARTER",
     testOnly: false,
   },
   pro: {
@@ -24,7 +24,7 @@ export const paymentCatalog = {
     commercialLicense: true,
     priorityQueue: true,
     creemProductEnv: "CREEM_PRODUCT_PRO",
-    waffoProductEnv: null,
+    waffoProductEnv: "WAFFO_PRODUCT_PRO",
     testOnly: false,
   },
   credits: {
@@ -36,7 +36,7 @@ export const paymentCatalog = {
     commercialLicense: false,
     priorityQueue: false,
     creemProductEnv: "CREEM_PRODUCT_CREDIT_PACK",
-    waffoProductEnv: null,
+    waffoProductEnv: "WAFFO_PRODUCT_CREDIT_PACK",
     testOnly: false,
   },
   test_credits: {

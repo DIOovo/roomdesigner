@@ -59,10 +59,11 @@ test("test pack stays account-only and is never exposed in public pricing", asyn
   assert.doesNotMatch([homepage, pricing, button].join("\n"), /test_credits|Test Credit Pack|5 credits/);
 });
 
-test("public subscriptions remain gated while only Credit Pack can reach Creem", async () => {
+test("Creem remains dormant while public production checkout uses Waffo", async () => {
   const button = await read("components/pricing/checkout-button.tsx");
-  assert.match(button, /if \(!paymentsLive \|\| plan !== "credits"\)/);
+  assert.match(button, /if \(!paymentsLive\)/);
   assert.match(button, /Payments are opening soon/);
-  assert.match(button, /fetch\("\/api\/creem\/checkout"/);
+  assert.match(button, /fetch\("\/api\/waffo\/checkout"/);
+  assert.doesNotMatch(button, /fetch\("\/api\/creem\/checkout"/);
   assert.doesNotMatch(button, /fetch\("\/api\/stripe\/checkout"/);
 });

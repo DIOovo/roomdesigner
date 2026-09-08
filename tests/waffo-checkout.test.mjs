@@ -9,11 +9,11 @@ const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 test("Waffo test checkout remains authenticated, test-only, and allowlisted", async () => {
   const route = await read("app/api/waffo/checkout/route.ts");
   const auth = route.indexOf("if (!user)");
-  const allowlist = route.indexOf("if (!canUsePaymentTest(user.email))");
+  const allowlist = route.indexOf("!canUsePaymentTest(user.email)");
   const checkout = route.indexOf("await createWaffoCheckout");
   assert.ok(auth > -1 && auth < allowlist && allowlist < checkout);
   assert.match(route, /status: 401/);
-  assert.match(route, /body\.productKey !== "test_credits"/);
+  assert.match(route, /productKey === "test_credits" && !canUsePaymentTest\(user\.email\)/);
   assert.match(route, /status: 403/);
   assert.equal(canUsePaymentTest("qa@example.com", { PAYMENTS_TEST_MODE: "true", PAYMENTS_TEST_EMAILS: "QA@example.com" }), true);
   assert.equal(canUsePaymentTest("qa@example.com", { PAYMENTS_TEST_MODE: "false", PAYMENTS_TEST_EMAILS: "qa@example.com" }), false);
@@ -26,14 +26,24 @@ test("Waffo checkout accepts only productKey and resolves the product ID server-
     read("lib/payments/providers/waffo.ts"),
   ]);
   assert.match(route, /Object\.keys\(body\)\.some\(\(key\) => key !== "productKey"\)/);
-  assert.match(route, /getWaffoProductId\("test_credits"\)/);
+  assert.match(route, /getWaffoProductId\(productKey\)/);
   assert.doesNotMatch(route, /body\.(userId|email|amount|currency|credits|productId)/);
   assert.match(provider, /productId: input\.productId/);
   assert.match(provider, /currency: "USD"/);
   assert.match(provider, /metadata: \{/);
   assert.match(provider, /user_id: input\.userId/);
-  assert.match(provider, /product_id: input\.productId/);
+  assert.match(provider, /waffo_product_id: input\.productId/);
   assert.doesNotMatch(provider, /NEXT_PUBLIC_WAFFO/);
+});
+
+test("formal Waffo products require PAYMENTS_LIVE while the test pack keeps its independent allowlist", async () => {
+  const route = await read("app/api/waffo/checkout/route.ts");
+  assert.match(route, /isPaymentProductKey\(body\.productKey\)/);
+  assert.match(route, /productKey === "test_credits" && !canUsePaymentTest\(user\.email\)/);
+  assert.match(route, /productKey !== "test_credits" && !isPaymentsLive\(process\.env\.PAYMENTS_LIVE\)/);
+  assert.match(route, /status: 503/);
+  assert.match(route, /getWaffoProductId\(productKey\)/);
+  assert.doesNotMatch(route, /body\.(?:credits|amount|currency|productId|commercialLicense|priorityQueue|userId)/);
 });
 
 test("Waffo credentials prefer base64 PEM and fail before the SDK with safe diagnostics", async () => {
@@ -55,13 +65,25 @@ test("Waffo credentials prefer base64 PEM and fail before the SDK with safe diag
   assert.match(envExample, /^WAFFO_PRIVATE_KEY_BASE64=$/m);
 });
 
-test("Waffo product mapping is fail-closed and limited to the hidden test pack", () => {
-  const enabled = { PAYMENTS_TEST_MODE: "true", WAFFO_PRODUCT_TEST_CREDITS: "PROD_test" };
+test("Waffo product mapping covers production products and remains fail-closed", () => {
+  const enabled = {
+    PAYMENTS_TEST_MODE: "true",
+    WAFFO_PRODUCT_CREDIT_PACK: "PROD_credits",
+    WAFFO_PRODUCT_STARTER: "PROD_starter",
+    WAFFO_PRODUCT_PRO: "PROD_pro",
+    WAFFO_PRODUCT_TEST_CREDITS: "PROD_test",
+  };
+  assert.equal(getWaffoProductId("credits", enabled), "PROD_credits");
+  assert.equal(getWaffoProductId("starter", enabled), "PROD_starter");
+  assert.equal(getWaffoProductId("pro", enabled), "PROD_pro");
   assert.equal(getWaffoProductId("test_credits", enabled), "PROD_test");
+  assert.equal(getPaymentProductKeyByWaffoId("PROD_credits", enabled), "credits");
+  assert.equal(getPaymentProductKeyByWaffoId("PROD_starter", enabled), "starter");
+  assert.equal(getPaymentProductKeyByWaffoId("PROD_pro", enabled), "pro");
   assert.equal(getPaymentProductKeyByWaffoId("PROD_test", enabled), "test_credits");
   assert.equal(getPaymentProductKeyByWaffoId("PROD_unknown", enabled), null);
   assert.throws(() => getWaffoProductId("test_credits", { PAYMENTS_TEST_MODE: "false", WAFFO_PRODUCT_TEST_CREDITS: "PROD_test" }), /not enabled/);
-  assert.throws(() => getWaffoProductId("credits", { PAYMENTS_TEST_MODE: "true" }), /not available through Waffo/);
+  assert.throws(() => getWaffoProductId("credits", {}), /WAFFO_PRODUCT_CREDIT_PACK is not configured/);
 });
 
 test("account test entry opens Waffo checkout in a new tab and remains absent from public pricing", async () => {

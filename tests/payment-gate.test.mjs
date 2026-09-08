@@ -30,8 +30,8 @@ test("all paid plan buttons share the availability modal and free remains a gene
   assert.match(button, /event\.key !== "Tab"/);
   assert.match(button, /scrollIntoView/);
   assert.match(button, /router\.push\("\/#generator"\)/);
-  assert.ok(button.indexOf('if (!paymentsLive || plan !== "credits")') < button.indexOf('fetch("/api/creem/checkout"'));
-  assert.match(button, /productKey: "credits"/);
+  assert.ok(button.indexOf("if (!paymentsLive)") < button.indexOf('fetch("/api/waffo/checkout"'));
+  assert.match(button, /productKey: plan/);
   assert.match(homepage, /<CheckoutButton/);
   assert.match(homepage, /plan=\{plan\.name === "Starter" \? "starter" : plan\.name === "Pro" \? "pro" : "credits"\}/);
   assert.match(homepage, />Choose plan<\/CheckoutButton>/);

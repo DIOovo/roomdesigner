@@ -33,6 +33,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
     ["Commercial license", entitlement.commercialLicense ? "Included" : "Not included"],
     ["Priority queue", entitlement.priorityQueue ? "Included" : "Standard queue"],
     ["Subscription status", entitlement.subscriptionStatus ?? "No active subscription"],
+    ["Current period ends", entitlement.subscriptionCurrentPeriodEnd ? formatDate(entitlement.subscriptionCurrentPeriodEnd) : "Not subscribed"],
   ] as const;
   return (
     <main className="shell py-16 md:py-20">
@@ -58,6 +59,10 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
 }
 
 function title(value: string) { return value[0].toUpperCase() + value.slice(1); }
+
+function formatDate(value: string) {
+  return new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeZone: "UTC" }).format(new Date(value));
+}
 
 function planCapabilities(entitlement: UserEntitlements) {
   return [

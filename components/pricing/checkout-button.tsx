@@ -67,7 +67,7 @@ export function CheckoutButton({ plan, children, featured = false }: { plan: "st
         disabled={loading}
         onClick={async () => {
           track("upgrade_clicked", { plan, authenticated: authenticated === true });
-          if (!paymentsLive || plan !== "credits") {
+          if (!paymentsLive) {
             setAvailabilityOpen(true);
             return;
           }
@@ -77,7 +77,7 @@ export function CheckoutButton({ plan, children, featured = false }: { plan: "st
           }
           setLoading(true);
           track("checkout", { plan });
-          const response = await fetch("/api/creem/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ productKey: "credits" }) });
+          const response = await fetch("/api/waffo/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ productKey: plan }) });
           const data = (await response.json()) as { checkoutUrl?: string; error?: string };
           if (data.checkoutUrl) window.location.assign(data.checkoutUrl);
           else if (response.status === 401) window.location.assign(`/login?next=${encodeURIComponent("/#pricing")}`);

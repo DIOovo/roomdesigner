@@ -71,6 +71,13 @@ test("migration preserves historical Stripe rows and adds provider uniqueness", 
   assert.doesNotMatch(migration, /update public\.(orders|subscriptions|credit_grants)/i);
 });
 
+test("Waffo subscription migration only adds the signed period start", async () => {
+  const migration = await read("supabase/migrations/007_waffo_subscription_periods.sql");
+  assert.match(migration, /alter table public\.subscriptions/);
+  assert.match(migration, /add column if not exists current_period_start timestamptz/);
+  assert.doesNotMatch(migration, /drop column|drop table|payment_events|credit_grants|orders/);
+});
+
 test("payment event inbox uses an atomic RPC and is inaccessible to browser roles", async () => {
   const [migration, events] = await Promise.all([
     read("supabase/migrations/006_creem_payments.sql"),

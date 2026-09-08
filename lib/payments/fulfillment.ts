@@ -64,10 +64,11 @@ export async function grantOneTimeCredits(input: {
 export async function syncPaidSubscription(input: {
   userId: string;
   provider: PaymentProvider;
-  providerCustomerId: string;
+  providerCustomerId?: string | null;
   providerSubscriptionId: string;
   productKey: "starter" | "pro";
   status: "active" | "trialing" | "scheduled_cancel" | "canceled" | "past_due" | "unpaid" | "expired" | "paused";
+  currentPeriodStart: Date | string | null;
   currentPeriodEnd: Date | string | null;
 }, admin = requireAdmin()) {
   const product = getEnabledPaymentProduct(input.productKey);
@@ -77,17 +78,56 @@ export async function syncPaidSubscription(input: {
   const result = await admin.from("subscriptions").upsert({
     user_id: input.userId,
     payment_provider: input.provider,
-    provider_customer_id: required(input.providerCustomerId, "provider customer ID"),
+    provider_customer_id: input.providerCustomerId?.trim() || null,
     provider_subscription_id: required(input.providerSubscriptionId, "provider subscription ID"),
     plan: input.productKey,
     status,
     period_credits: product.creditsPerPeriod,
     commercial_license: active && product.commercialLicense,
     priority_queue: active && product.priorityQueue,
+    current_period_start: input.currentPeriodStart ? validDate(input.currentPeriodStart, "current period start").toISOString() : null,
     current_period_end: input.currentPeriodEnd ? validDate(input.currentPeriodEnd, "current period end").toISOString() : null,
     updated_at: new Date().toISOString(),
-  }, { onConflict: "payment_provider,provider_subscription_id" }).select("id,user_id,plan,status,current_period_end").single();
+  }, { onConflict: "payment_provider,provider_subscription_id" }).select("id,user_id,plan,status,current_period_start,current_period_end").single();
   return dataOrThrow(result, "The paid subscription could not be synchronized.");
+}
+
+export async function markPaymentOrderRefunded(input: {
+  userId: string;
+  provider: PaymentProvider;
+  providerOrderId: string;
+  productKey: PaymentProductKey;
+}, admin = requireAdmin()) {
+  getPaymentProduct(input.productKey);
+  const result = await admin.from("orders")
+    .update({ status: "refunded" })
+    .eq("payment_provider", input.provider)
+    .eq("provider_order_id", required(input.providerOrderId, "provider order ID"))
+    .eq("user_id", input.userId)
+    .eq("product_type", input.productKey)
+    .select("id,user_id,status,product_type")
+    .single();
+  return dataOrThrow(result, "The refunded payment order could not be updated.");
+}
+
+export async function revokeOneTimeCreditsForRefund(input: {
+  userId: string;
+  provider: PaymentProvider;
+  providerOrderId: string;
+  productKey: PaymentProductKey;
+  orderId: string;
+}, admin = requireAdmin()) {
+  const product = getPaymentProduct(input.productKey);
+  if (product.type !== "one_time") throw new Error("The refunded payment product is not a one-time credit product.");
+  const result = await admin.from("credit_grants")
+    .update({ credits_remaining: 0 })
+    .eq("payment_provider", input.provider)
+    .eq("provider_grant_key", oneTimeGrantKey(input.providerOrderId))
+    .eq("order_id", input.orderId)
+    .eq("user_id", input.userId)
+    .select("id,credits_total,credits_remaining,provider_grant_key")
+    .single();
+  return dataOrThrow(result, "The refunded credit grant could not be revoked.");
 }
 
 export async function grantSubscriptionPeriod(input: {

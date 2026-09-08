@@ -10,6 +10,7 @@ export type UserEntitlements = {
   totalCreditsRemaining: number;
   plan: RoomFaceliftPlan;
   subscriptionStatus: string | null;
+  subscriptionCurrentPeriodEnd: string | null;
   commercialLicense: boolean;
   priorityQueue: boolean;
   watermarkRequired: boolean;

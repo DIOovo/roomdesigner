@@ -1,6 +1,7 @@
 import "server-only";
 import { createPrivateKey } from "node:crypto";
 import { WaffoPancake } from "@waffo/pancake-ts";
+import type { PaymentProductKey } from "@/lib/payments/catalog";
 
 type CheckoutClient = Pick<WaffoPancake, "checkout">;
 
@@ -8,7 +9,7 @@ export async function createWaffoCheckout(input: {
   userId: string;
   email: string;
   productId: string;
-  productKey: "test_credits";
+  productKey: PaymentProductKey;
   checkoutReference: string;
   successUrl: string;
 }, options: { client?: CheckoutClient; env?: NodeJS.ProcessEnv } = {}) {
@@ -22,7 +23,7 @@ export async function createWaffoCheckout(input: {
     metadata: {
       user_id: input.userId,
       product_key: input.productKey,
-      product_id: input.productId,
+      waffo_product_id: input.productId,
       checkout_reference: input.checkoutReference,
     },
   });

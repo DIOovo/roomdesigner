@@ -23,6 +23,7 @@ test("Starter and Pro entitlements remain distinct", () => {
   const pro = calculateEntitlements({ authenticated: true, grants, subscriptions: [{ plan: "pro", status: "trialing", current_period_end: "2026-10-01T00:00:00Z" }], now });
   assert.deepEqual([starter.resolution, starter.watermarkRequired, starter.commercialLicense, starter.priorityQueue], ["768p", false, false, false]);
   assert.deepEqual([pro.resolution, pro.watermarkRequired, pro.commercialLicense, pro.priorityQueue], ["768p", false, true, true]);
+  assert.equal(starter.subscriptionCurrentPeriodEnd, "2026-10-01T00:00:00Z");
 });
 
 test("credit-pack-only access is clean HD without commercial rights", () => {
@@ -36,4 +37,6 @@ test("expired grants and inactive subscriptions confer no entitlement", () => {
     { source: "credit_pack", credits_remaining: 3, expires_at: "2026-09-03T23:59:59Z" },
   ], subscriptions: [{ plan: "pro", status: "canceled", current_period_end: "2026-10-01T00:00:00Z" }], now });
   assert.deepEqual([value.totalCreditsRemaining, value.plan, value.commercialLicense, value.priorityQueue], [0, "free", false, false]);
+  assert.equal(value.subscriptionStatus, "canceled");
+  assert.equal(value.subscriptionCurrentPeriodEnd, "2026-10-01T00:00:00Z");
 });
