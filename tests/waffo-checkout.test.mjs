@@ -36,6 +36,25 @@ test("Waffo checkout accepts only productKey and resolves the product ID server-
   assert.doesNotMatch(provider, /NEXT_PUBLIC_WAFFO/);
 });
 
+test("Waffo credentials prefer base64 PEM and fail before the SDK with safe diagnostics", async () => {
+  const [route, provider, envExample] = await Promise.all([
+    read("app/api/waffo/checkout/route.ts"),
+    read("lib/payments/providers/waffo.ts"),
+    read(".env.example"),
+  ]);
+  assert.match(route, /export const runtime = "nodejs"/);
+  assert.match(provider, /env\.WAFFO_PRIVATE_KEY_BASE64\?\.trim\(\)/);
+  assert.match(provider, /encodedPrivateKey \? "base64" : legacyPrivateKey \? "legacy" : "missing"/);
+  assert.match(provider, /Buffer\.from\(encodedPrivateKey, "base64"\)\.toString\("utf8"\)\.trim\(\)/);
+  assert.match(provider, /createPrivateKey\(privateKey\)/);
+  assert.match(provider, /keySource,\s+hasPemHeader,\s+hasPemFooter,\s+hasNewline,\s+keyParseable,/s);
+  assert.match(provider, /WAFFO private key environment variable is missing/);
+  assert.match(provider, /Decoded WAFFO_PRIVATE_KEY_BASE64 is not a PEM private key/);
+  assert.match(provider, /Decoded Waffo private key is not parseable by Node crypto/);
+  assert.doesNotMatch(provider, /console\.(?:info|warn|error)\([^\n]*(?:privateKey|encodedPrivateKey)/);
+  assert.match(envExample, /^WAFFO_PRIVATE_KEY_BASE64=$/m);
+});
+
 test("Waffo product mapping is fail-closed and limited to the hidden test pack", () => {
   const enabled = { PAYMENTS_TEST_MODE: "true", WAFFO_PRODUCT_TEST_CREDITS: "PROD_test" };
   assert.equal(getWaffoProductId("test_credits", enabled), "PROD_test");

@@ -6,6 +6,8 @@ import { createWaffoCheckout } from "@/lib/payments/providers/waffo";
 import { resolveSiteUrl } from "@/lib/site";
 import { getSupabaseServer } from "@/lib/supabase/server";
 
+export const runtime = "nodejs";
+
 export async function POST(request: Request) {
   const supabase = await getSupabaseServer();
   const user = supabase ? (await supabase.auth.getUser()).data.user : null;
