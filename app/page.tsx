@@ -127,7 +127,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                 {plan.features.map((feature) => <li key={feature} className="flex items-start gap-2"><Check size={17} weight="bold" className="mt-0.5 shrink-0 text-[var(--accent)]" />{feature}</li>)}
               </ul>
               <div className="mt-auto">
-                {plan.name === "Free" ? <Link href="#generator" className="focus-ring mt-7 flex w-full items-center justify-center gap-2 rounded-lg border border-[var(--line)] bg-[var(--surface-2)] px-4 py-3 text-sm font-black hover:border-[var(--accent)]">Try free <ArrowRight size={16} weight="bold" /></Link> : <CheckoutButton plan={plan.name === "Starter" ? "starter" : plan.name === "Pro" ? "pro" : "credits"} featured={plan.featured}>Choose {plan.name}</CheckoutButton>}
+                {plan.name === "Free" ? <Link href="#generator" className="focus-ring mt-7 flex w-full items-center justify-center gap-2 rounded-lg border border-[var(--line)] bg-[var(--surface-2)] px-4 py-3 text-sm font-black hover:border-[var(--accent)]">Try free <ArrowRight size={16} weight="bold" /></Link> : <CheckoutButton plan={plan.name === "Starter" ? "starter" : plan.name === "Pro" ? "pro" : "credits"} featured={plan.featured}>Choose plan</CheckoutButton>}
               </div>
             </article>
           ))}

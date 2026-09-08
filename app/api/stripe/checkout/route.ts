@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
+import { isPaymentsLive } from "@/lib/payments/availability";
 import { getStripe, stripePlans } from "@/lib/stripe/client";
 import { getSupabaseServer } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
+  if (!isPaymentsLive(process.env.PAYMENTS_LIVE)) {
+    return NextResponse.json({ error: "Payments are temporarily unavailable." }, { status: 503 });
+  }
   const stripe = getStripe();
   if (!stripe) return NextResponse.json({ error: "Stripe test mode is not configured. Add STRIPE_SECRET_KEY and Price IDs to .env.local." }, { status: 503 });
   const { plan } = (await request.json()) as { plan?: keyof typeof stripePlans };
