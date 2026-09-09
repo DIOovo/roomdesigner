@@ -2,20 +2,68 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
+  detectRoomImageContentType,
   MAX_ROOM_IMAGE_BYTES,
   isOwnedPendingInputPath,
+  isSupportedRoomImageContentType,
+  needsMagicByteValidation,
+  resolveRoomImageContentType,
   storagePathFromSignedImageUrl,
   validateRoomImageMetadata,
+  validateRoomImageSize,
 } from "../lib/assets/input-upload-validation.ts";
 import { ApiResponseError, readApiResponse } from "../lib/http/client-response.ts";
 
 test("current 10MB policy accepts representative production upload sizes", () => {
-  for (const size of [500 * 1024, 3 * 1024 * 1024, 5 * 1024 * 1024, 8 * 1024 * 1024]) {
+  for (const size of [500 * 1024, 3 * 1024 * 1024, 5 * 1024 * 1024, Math.round(5.6 * 1024 * 1024), 8 * 1024 * 1024]) {
     assert.equal(validateRoomImageMetadata("image/jpeg", size), null);
   }
   assert.equal(validateRoomImageMetadata("image/png", MAX_ROOM_IMAGE_BYTES), null);
   assert.match(validateRoomImageMetadata("image/jpeg", MAX_ROOM_IMAGE_BYTES + 1), /10MB/);
+  assert.match(validateRoomImageMetadata("application/octet-stream", MAX_ROOM_IMAGE_BYTES + 1), /10MB/);
   assert.match(validateRoomImageMetadata("image/webp", 500 * 1024), /PNG and JPG/);
+});
+
+test("declared PNG and JPEG metadata are accepted", () => {
+  assert.equal(isSupportedRoomImageContentType("image/png"), true);
+  assert.equal(isSupportedRoomImageContentType("image/jpeg"), true);
+  assert.equal(resolveRoomImageContentType({ type: "image/png", name: "room.png" }), "image/png");
+  assert.equal(resolveRoomImageContentType({ type: "image/jpeg", name: "room.jpg" }), "image/jpeg");
+});
+
+test("empty browser MIME can be inferred only for PNG and JPEG filenames", () => {
+  assert.equal(resolveRoomImageContentType({ type: "", name: "room.png" }), "image/png");
+  assert.equal(resolveRoomImageContentType({ type: "", name: "room.jpg" }), "image/jpeg");
+  assert.equal(resolveRoomImageContentType({ type: "", name: "room.jpeg" }), "image/jpeg");
+  assert.equal(resolveRoomImageContentType({ type: "", name: "room.gif" }), null);
+  assert.equal(resolveRoomImageContentType({ type: "", name: "room.webp" }), null);
+});
+
+test("octet-stream or missing metadata falls back to PNG and JPEG magic bytes", () => {
+  const png = Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+  const jpeg = Uint8Array.from([0xff, 0xd8, 0xff, 0xe0]);
+  assert.equal(needsMagicByteValidation("application/octet-stream"), true);
+  assert.equal(needsMagicByteValidation(""), true);
+  assert.equal(needsMagicByteValidation(undefined), true);
+  assert.equal(detectRoomImageContentType(png), "image/png");
+  assert.equal(detectRoomImageContentType(jpeg), "image/jpeg");
+});
+
+test("fake PNG, GIF, and WebP content are rejected", () => {
+  const fakePng = Uint8Array.from([0x00, 0x50, 0x4e, 0x47, 0x00, 0x00, 0x00, 0x00]);
+  const gif = new TextEncoder().encode("GIF89a");
+  const webp = new TextEncoder().encode("RIFF0000WEBP");
+  assert.equal(detectRoomImageContentType(fakePng), null);
+  assert.equal(detectRoomImageContentType(gif), null);
+  assert.equal(detectRoomImageContentType(webp), null);
+  assert.equal(isSupportedRoomImageContentType("image/gif"), false);
+  assert.equal(isSupportedRoomImageContentType("image/webp"), false);
+});
+
+test("5.6MB PNG finalization size is accepted and over 10MB stays size-specific", () => {
+  assert.equal(validateRoomImageSize(Math.round(5.6 * 1024 * 1024)), null);
+  assert.equal(validateRoomImageMetadata("image/png", Math.round(5.6 * 1024 * 1024)), null);
+  assert.equal(validateRoomImageSize(MAX_ROOM_IMAGE_BYTES + 1), "The image must be 10MB or smaller.");
 });
 
 test("signed input URLs resolve only to owned pending paths", () => {
@@ -41,6 +89,10 @@ test("generator uploads to Storage first and sends only a lightweight JSON gener
   assert.match(generateRoute, /imageUrl\.startsWith\("data:"\)|imageUrl\.includes\("base64,"\)/);
   assert.match(uploadRoute, /createInputUpload/);
   assert.match(uploadRoute, /signUploadedInput/);
+  assert.match(generator, /uploadBody\.append\("", typedFile, typedFile\.name\)/);
+  assert.match(generator, /new File\(\[file\], file\.name, \{ type: contentType/);
+  assert.match(source("lib/assets/frame-assets.ts"), /object\.contentType \?\? object\.metadata\?\.mimetype/);
+  assert.match(source("lib/assets/frame-assets.ts"), /range: "bytes=0-15"/);
 
   const payload = JSON.stringify({
     imageUrl: "https://project.supabase.co/storage/v1/object/sign/generation-inputs/owner/pending/photo.jpg?token=short-lived-signature",

@@ -9,6 +9,7 @@ import { track } from "@/lib/analytics/events";
 import type { CreditSource, UserEntitlements } from "@/lib/entitlements/types";
 import { isDesignScope, type DesignScope } from "@/lib/generation/design-scope";
 import { ApiResponseError, readApiResponse } from "@/lib/http/client-response";
+import { resolveRoomImageContentType } from "@/lib/assets/input-upload-validation";
 
 type Status = "idle" | "queued" | "processing" | "error" | "auth" | "upgrade";
 
@@ -72,7 +73,7 @@ export function RoomGenerator({ reuseId }: { reuseId?: string }) {
   }, [reuseId]);
 
   const validateFile = useCallback((next: File) => {
-    if (!['image/jpeg', 'image/png'].includes(next.type)) {
+    if (!resolveRoomImageContentType(next)) {
       setStatus("error");
       setMessage("Please choose a PNG or JPG image.");
       return false;
@@ -309,17 +310,20 @@ function generateLabel(entitlements: UserEntitlements | null) {
 }
 
 async function uploadRoomImage(file: File, signal: AbortSignal, setMessage: (message: string) => void) {
+  const contentType = resolveRoomImageContentType(file);
+  if (!contentType) throw new Error("Only PNG and JPG images are accepted.");
+  const typedFile = file.type === contentType ? file : new File([file], file.name, { type: contentType, lastModified: file.lastModified });
   setMessage("Uploading your room photo...");
   const prepareResponse = await fetch("/api/uploads/room-image", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ contentType: file.type, size: file.size }),
+    body: JSON.stringify({ contentType, size: typedFile.size }),
     signal,
   });
   const prepared = await readApiResponse<UploadResponse>(prepareResponse, "The room photo upload could not be prepared.");
   const uploadBody = new FormData();
   uploadBody.append("cacheControl", "3600");
-  uploadBody.append("", file);
+  uploadBody.append("", typedFile, typedFile.name);
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const uploaded = await fetch(prepared.signedUrl, {
     method: "PUT",

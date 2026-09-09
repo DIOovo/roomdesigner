@@ -1,6 +1,14 @@
 import { fal } from "@fal-ai/client";
 import type { getSupabaseAdmin } from "@/lib/supabase/admin";
-import { isOwnedPendingInputPath, storagePathFromSignedImageUrl, validateRoomImageMetadata } from "./input-upload-validation";
+import {
+  detectRoomImageContentType,
+  isOwnedPendingInputPath,
+  isSupportedRoomImageContentType,
+  needsMagicByteValidation,
+  normalizeContentType,
+  storagePathFromSignedImageUrl,
+  validateRoomImageSize,
+} from "./input-upload-validation";
 import { downloadRemoteAsset } from "./remote-download";
 
 type AdminClient = NonNullable<ReturnType<typeof getSupabaseAdmin>>;
@@ -61,8 +69,76 @@ function isLocalHost(hostname: string) { return hostname === "localhost" || host
 
 async function assertStoredInput(admin: AdminClient, path: string) {
   const info = await admin.storage.from("generation-inputs").info(path);
-  if (info.error || !info.data) throw new Error("The uploaded room photo could not be found.");
-  const metadata = (info.data as { metadata?: { mimetype?: unknown; size?: unknown } }).metadata;
-  const validation = validateRoomImageMetadata(metadata?.mimetype, Number(metadata?.size));
-  if (validation) throw new Error(validation);
+  if (info.error || !info.data) {
+    logInputValidation({ path, storedContentType: "missing", detectedFormat: "unknown", validationSource: "metadata", status: "not-found" });
+    throw new Error("Upload could not be verified. Please upload the image again.");
+  }
+
+  const object = info.data as {
+    contentType?: unknown;
+    size?: unknown;
+    metadata?: { mimetype?: unknown; contentType?: unknown; size?: unknown };
+  };
+  const storedContentType = normalizeContentType(object.contentType ?? object.metadata?.mimetype ?? object.metadata?.contentType);
+  const storedSize = numberOrNull(object.size ?? object.metadata?.size);
+  const sizeError = validateRoomImageSize(storedSize);
+  if (sizeError) {
+    logInputValidation({ path, storedContentType: storedContentType || "missing", detectedFormat: "unknown", validationSource: "metadata", status: "rejected-size" });
+    throw new Error(sizeError);
+  }
+
+  if (isSupportedRoomImageContentType(storedContentType)) {
+    logInputValidation({ path, storedContentType, detectedFormat: storedContentType, validationSource: "metadata", status: "accepted" });
+    return;
+  }
+  if (!needsMagicByteValidation(storedContentType)) {
+    logInputValidation({ path, storedContentType, detectedFormat: "unknown", validationSource: "metadata", status: "rejected-format" });
+    throw new Error("Only PNG and JPG images are accepted.");
+  }
+
+  const prefix = await readStoredInputPrefix(admin, path);
+  const detectedFormat = detectRoomImageContentType(prefix);
+  if (!detectedFormat) {
+    logInputValidation({ path, storedContentType: storedContentType || "missing", detectedFormat: "unknown", validationSource: "magic-bytes", status: "rejected-format" });
+    throw new Error("Only PNG and JPG images are accepted.");
+  }
+  logInputValidation({ path, storedContentType: storedContentType || "missing", detectedFormat, validationSource: "magic-bytes", status: "accepted" });
+}
+
+async function readStoredInputPrefix(admin: AdminClient, path: string) {
+  const signed = await admin.storage.from("generation-inputs").createSignedUrl(path, 60);
+  if (signed.error) throw new Error("Upload could not be verified. Please upload the image again.");
+  const response = await fetch(signed.data.signedUrl, { headers: { range: "bytes=0-15" }, cache: "no-store" });
+  if (!response.ok || !response.body) throw new Error("Upload could not be verified. Please upload the image again.");
+  const reader = response.body.getReader();
+  const prefix = new Uint8Array(16);
+  let offset = 0;
+  try {
+    while (offset < prefix.length) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk = value.subarray(0, prefix.length - offset);
+      prefix.set(chunk, offset);
+      offset += chunk.length;
+    }
+  } finally {
+    await reader.cancel().catch(() => undefined);
+  }
+  return prefix.subarray(0, offset);
+}
+
+function numberOrNull(value: unknown) {
+  const number = typeof value === "number" ? value : typeof value === "string" && value.trim() ? Number(value) : NaN;
+  return Number.isFinite(number) ? number : null;
+}
+
+function logInputValidation(input: {
+  path: string;
+  storedContentType: string;
+  detectedFormat: string;
+  validationSource: "metadata" | "magic-bytes";
+  status: string;
+}) {
+  const pathSuffix = input.path.split("/").at(-1) ?? "unknown";
+  console.info("Room image validation", { pathSuffix, storedContentType: input.storedContentType, detectedFormat: input.detectedFormat, validationSource: input.validationSource, status: input.status });
 }
