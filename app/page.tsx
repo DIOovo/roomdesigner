@@ -100,20 +100,6 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         </div>
       </section>
 
-      <section className="border-y border-[var(--line)] bg-[color:var(--surface)]/35 py-20 md:py-28">
-        <div className="shell grid gap-10 lg:grid-cols-[.7fr_1.3fr]">
-          <div><h2 className="text-4xl md:text-5xl">Questions before you redesign?</h2><p className="mt-5 max-w-md leading-7 text-[var(--muted)]">Straight answers about free previews, no-login use, photo quality, and professional licensing.</p></div>
-          <div className="grid gap-3">
-            {faqs.map((faq) => (
-              <details key={faq.question} className="group surface p-5 open:bg-[var(--surface-2)]">
-                <summary className="focus-ring cursor-pointer list-none rounded-sm pr-8 text-lg font-bold marker:hidden">{faq.question}</summary>
-                <p className="mt-3 max-w-3xl leading-7 text-[var(--muted)]">{faq.answer}</p>
-              </details>
-            ))}
-          </div>
-        </div>
-      </section>
-
       <section id="pricing" className="shell py-20 md:py-28">
         <div className="max-w-2xl"><h2 className="text-4xl md:text-6xl">Start free. Pay when the work gets serious.</h2><p className="mt-5 text-lg leading-8 text-[var(--muted)]">Every real generation is five seconds. Commercial rights are reserved for Pro.</p></div>
         <div className="mt-12 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -134,6 +120,20 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         </div>
         <p className="mt-7 text-center text-sm font-semibold text-[var(--muted)]">Upgrade to remove watermark + unlock HD + commercial license</p>
         <p className="mt-4 text-center text-sm text-[var(--muted)]">Need practical tips first? Read our <Link href="/blog" className="font-bold text-[var(--accent)] underline">AI room design guides</Link>.</p>
+      </section>
+
+      <section className="border-y border-[var(--line)] bg-[color:var(--surface)]/35 py-20 md:py-28">
+        <div className="shell grid gap-10 lg:grid-cols-[.7fr_1.3fr]">
+          <div><h2 className="text-4xl md:text-5xl">Questions before you redesign?</h2><p className="mt-5 max-w-md leading-7 text-[var(--muted)]">Straight answers about free previews, no-login use, photo quality, and professional licensing.</p></div>
+          <div className="grid gap-3">
+            {faqs.map((faq) => (
+              <details key={faq.question} className="group surface p-5 open:bg-[var(--surface-2)]">
+                <summary className="focus-ring cursor-pointer list-none rounded-sm pr-8 text-lg font-bold marker:hidden">{faq.question}</summary>
+                <p className="mt-3 max-w-3xl leading-7 text-[var(--muted)]">{faq.answer}</p>
+              </details>
+            ))}
+          </div>
+        </div>
       </section>
     </main>
   );
