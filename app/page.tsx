@@ -23,9 +23,7 @@ const plans: readonly Plan[] = [
   { name: "Credit Pack", price: "$19.99", note: "one-time", features: ["30 video credits", "5-second HD video", "Valid for one year", "No subscription"] },
 ];
 
-export default async function HomePage({ searchParams }: { searchParams: Promise<{ reuse?: string | string[] }> }) {
-  const query = await searchParams;
-  const reuseId = typeof query.reuse === "string" ? query.reuse : undefined;
+export default function HomePage() {
   return (
     <main>
       <StructuredData />
@@ -41,7 +39,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             Upload one room photo. Watch it transform into your chosen style in a smooth 5-second video.
           </p>
         </div>
-        <div className="hero-enter-delay"><RoomGenerator reuseId={reuseId} /></div>
+        <div className="hero-enter-delay"><RoomGenerator /></div>
         <p className="mt-3 max-w-4xl text-sm leading-6 text-[var(--muted)]">
           Try AI room design from a photo with no login for your first preview. Free previews are limited and include a watermark.
         </p>

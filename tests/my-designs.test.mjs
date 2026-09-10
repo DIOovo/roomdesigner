@@ -15,17 +15,17 @@ test("history only returns the authenticated user's own generations", () => {
 });
 
 test("logged-in header shows a one-click My designs entry", () => {
-  const header = source("components/site-header.tsx");
+  const header = source("components/header-account.tsx");
   assert.match(header, /href="\/my-designs"/);
   assert.match(header, /My designs/);
-  assert.ok(header.indexOf("My designs") > header.indexOf("{user ?"), "My designs must live inside the authenticated branch");
+  assert.ok(header.indexOf("My designs") > header.indexOf("if (!account?.email)"), "My designs must live inside the authenticated branch");
   assert.match(header, /whitespace-nowrap text-sm font-bold text-\[var\(--muted\)\]/);
 });
 
 test("logged-out header does not surface the account history entry", () => {
-  const header = source("components/site-header.tsx");
+  const header = source("components/header-account.tsx");
   assert.match(header, /\/login\?next=%2F%23generator/);
-  assert.ok(header.indexOf("My designs") < header.indexOf("Sign in"), "My designs is not part of the signed-out branch");
+  assert.ok(header.indexOf("My designs") > header.indexOf("Sign in"), "My designs is not part of the signed-out branch");
 });
 
 test("history thumbnail prefers the after frame and falls back to before", () => {

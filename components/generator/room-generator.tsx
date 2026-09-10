@@ -28,7 +28,7 @@ type JobResponse = {
 type ReuseResponse = { roomType?: string; style?: string; designScope?: string; error?: string };
 type UploadResponse = { path: string; signedUrl: string; imageUrl?: string; error?: string; requiresAuth?: boolean; requiresUpgrade?: boolean };
 
-export function RoomGenerator({ reuseId }: { reuseId?: string }) {
+export function RoomGenerator() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string>(samples[0].src);
@@ -39,6 +39,7 @@ export function RoomGenerator({ reuseId }: { reuseId?: string }) {
   const [stage, setStage] = useState("idle");
   const [message, setMessage] = useState("");
   const [reuseMessage, setReuseMessage] = useState("");
+  const [reuseId, setReuseId] = useState<string | undefined>(undefined);
   const [entitlements, setEntitlements] = useState<UserEntitlements | null>(null);
   const requestInFlight = useRef(false);
   const pollController = useRef<AbortController | null>(null);
@@ -48,6 +49,11 @@ export function RoomGenerator({ reuseId }: { reuseId?: string }) {
   useEffect(() => {
     fetch("/api/entitlements", { cache: "no-store" }).then((response) => readApiResponse<UserEntitlements>(response, "Credits could not be loaded.")).then(setEntitlements).catch(() => undefined);
     return () => pollController.current?.abort();
+  }, []);
+
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("reuse");
+    if (id) setReuseId(id);
   }, []);
 
   useEffect(() => {
