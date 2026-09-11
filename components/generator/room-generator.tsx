@@ -31,11 +31,11 @@ type UploadResponse = { path: string; signedUrl: string; imageUrl?: string; erro
 
 const GENERATION_DURATION_SECONDS = 5;
 
-export function RoomGenerator() {
+export function RoomGenerator({ initialRoomType = "Living Room" }: { initialRoomType?: (typeof roomTypes)[number] }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string>(samples[0].src);
-  const [room, setRoom] = useState<(typeof roomTypes)[number]>("Living Room");
+  const [room, setRoom] = useState<(typeof roomTypes)[number]>(initialRoomType);
   const [style, setStyle] = useState("Japandi");
   const [designScope, setDesignScope] = useState<DesignScope>("keep-layout");
   const [status, setStatus] = useState<Status>("idle");
