@@ -4,6 +4,7 @@ import { ANONYMOUS_COOKIE, anonymousStorageId, readAnonymousIdentity } from "@/l
 import { safeReturnTo } from "@/lib/auth/redirect";
 import { claimAnonymousUsage } from "@/lib/credits/claim-anonymous";
 import { readAnonymousUsage } from "@/lib/credits/anonymous";
+import { LOGIN_COMPLETION_COOKIE } from "@/lib/analytics/events";
 import { getSupabaseServer } from "@/lib/supabase/server";
 
 type ConfirmationOtpType = "signup" | "email";
@@ -35,6 +36,15 @@ export async function GET(request: Request) {
         if (claimed) {
           response.cookies.set(ANONYMOUS_COOKIE, "", { path: "/", maxAge: 0 });
           response.cookies.set("roomfacelift_free", "", { path: "/", maxAge: 0 });
+        }
+        if (result.data.user.app_metadata.provider === "google") {
+          response.cookies.set(LOGIN_COMPLETION_COOKIE, "google", {
+            httpOnly: false,
+            maxAge: 300,
+            path: "/",
+            sameSite: "lax",
+            secure: process.env.NODE_ENV === "production",
+          });
         }
         return response;
       }

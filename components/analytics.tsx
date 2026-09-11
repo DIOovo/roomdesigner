@@ -4,6 +4,7 @@ import Script from "next/script";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { CONSENT_EVENT, CONSENT_KEY, type ConsentChoice } from "@/lib/analytics/consent";
+import { LOGIN_COMPLETION_COOKIE, trackEvent } from "@/lib/analytics/events";
 
 export function Analytics() {
   const [consent, setConsent] = useState<ConsentChoice>("unknown");
@@ -33,10 +34,28 @@ export function Analytics() {
     if (typeof gtagFn !== "function") return;
     gtagFn("event", "page_view", {
       page_path: pathname,
-      page_location: window.location.href,
+      page_location: `${window.location.origin}${pathname}`,
       page_title: document.title,
     });
   }, [pathname]);
+
+  useEffect(() => {
+    if (consent !== "accepted" || !isProd || !ga) return;
+    const provider = readCookie(LOGIN_COMPLETION_COOKIE);
+    if (provider !== "google") return;
+    let attempts = 0;
+    let timer: number | undefined;
+    const send = () => {
+      if (typeof window.gtag !== "function") {
+        if (attempts++ < 20) timer = window.setTimeout(send, 250);
+        return;
+      }
+      trackEvent("login_completed", { provider });
+      document.cookie = `${LOGIN_COMPLETION_COOKIE}=; Max-Age=0; Path=/; SameSite=Lax`;
+    };
+    send();
+    return () => { if (timer) window.clearTimeout(timer); };
+  }, [consent, ga, isProd]);
 
   return (
     <>
@@ -44,7 +63,7 @@ export function Analytics() {
       {consent === "accepted" && isProd && ga ? (
         <>
           <Script src={`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(ga)}`} strategy="afterInteractive" />
-          <Script id="ga4" strategy="afterInteractive">{`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config',${JSON.stringify(ga)},{anonymize_ip:true});`}</Script>
+          <Script id="ga4" strategy="afterInteractive">{`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config',${JSON.stringify(ga)},{anonymize_ip:true,page_location:window.location.origin+window.location.pathname});`}</Script>
         </>
       ) : null}
       {consent === "accepted" && pixel ? (
@@ -53,6 +72,12 @@ export function Analytics() {
       {consent === "accepted" && adsense ? <Script async src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${encodeURIComponent(adsense)}`} crossOrigin="anonymous" strategy="afterInteractive" /> : null}
     </>
   );
+}
+
+function readCookie(name: string) {
+  const prefix = `${encodeURIComponent(name)}=`;
+  const value = document.cookie.split("; ").find((item) => item.startsWith(prefix))?.slice(prefix.length);
+  return value ? decodeURIComponent(value) : null;
 }
 
 function CookieConsent({ choice, onChoice }: { choice: ConsentChoice; onChoice: (choice: ConsentChoice) => void }) {

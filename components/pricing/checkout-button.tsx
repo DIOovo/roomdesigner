@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { track } from "@/lib/analytics/events";
+import { track, trackEvent } from "@/lib/analytics/events";
 import { isPaymentsLive } from "@/lib/payments/availability";
 
 export function CheckoutButton({ plan, children, featured = false }: { plan: "starter" | "pro" | "credits"; children: React.ReactNode; featured?: boolean }) {
@@ -66,6 +66,9 @@ export function CheckoutButton({ plan, children, featured = false }: { plan: "st
         type="button"
         disabled={loading}
         onClick={async () => {
+          const analyticsPlan = plan === "credits" ? "credit_pack" : plan;
+          const price = plan === "starter" ? 9.99 : plan === "pro" ? 24.99 : 19.99;
+          trackEvent("pricing_click", { plan: analyticsPlan });
           track("upgrade_clicked", { plan, authenticated: authenticated === true });
           if (!paymentsLive) {
             setAvailabilityOpen(true);
@@ -76,6 +79,7 @@ export function CheckoutButton({ plan, children, featured = false }: { plan: "st
             return;
           }
           setLoading(true);
+          trackEvent("checkout_started", { plan: analyticsPlan, price });
           track("checkout", { plan });
           const response = await fetch("/api/waffo/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ productKey: plan }) });
           const data = (await response.json()) as { checkoutUrl?: string; error?: string };

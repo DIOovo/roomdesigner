@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowRight, Check, FilmStrip, ImageSquare, UploadSimple, WarningCircle } from "@phosphor-icons/react";
 import { roomTypes, samples, styles } from "@/lib/site";
-import { track } from "@/lib/analytics/events";
-import type { CreditSource, UserEntitlements } from "@/lib/entitlements/types";
+import { toAnalyticsValue, track, trackEvent } from "@/lib/analytics/events";
+import type { CreditSource, RoomFaceliftPlan, UserEntitlements } from "@/lib/entitlements/types";
 import { isDesignScope, type DesignScope } from "@/lib/generation/design-scope";
 import { ApiResponseError, readApiResponse } from "@/lib/http/client-response";
 import { resolveRoomImageContentType } from "@/lib/assets/input-upload-validation";
@@ -23,10 +23,13 @@ type JobResponse = {
   requiresAuth?: boolean;
   requiresUpgrade?: boolean;
   creditSource?: CreditSource;
+  plan?: RoomFaceliftPlan;
 };
 
 type ReuseResponse = { roomType?: string; style?: string; designScope?: string; error?: string };
 type UploadResponse = { path: string; signedUrl: string; imageUrl?: string; error?: string; requiresAuth?: boolean; requiresUpgrade?: boolean };
+
+const GENERATION_DURATION_SECONDS = 5;
 
 export function RoomGenerator() {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -44,6 +47,7 @@ export function RoomGenerator() {
   const requestInFlight = useRef(false);
   const pollController = useRef<AbortController | null>(null);
   const reservedSource = useRef<CreditSource | null>(null);
+  const generationPlan = useRef<RoomFaceliftPlan>("free");
   const selectedStyleLabel = styles.find((item) => item.name === style)?.name ?? style;
 
   useEffect(() => {
@@ -93,11 +97,11 @@ export function RoomGenerator() {
     setPreview(URL.createObjectURL(next));
     setStatus("idle");
     setMessage("");
-    track("upload_completed", { sizeBucket: next.size > 5 * 1024 * 1024 ? "5-10mb" : "under-5mb", type: next.type });
     return true;
   }, []);
 
   function handlePrimaryAction() {
+    trackGenerateClick();
     if (entitlements && !entitlements.authenticated && entitlements.totalCreditsRemaining <= 0) {
       track("login_required", { source: "generator" });
       window.location.assign("/login?next=%2F%23generator");
@@ -127,9 +131,14 @@ export function RoomGenerator() {
     setStatus("queued");
     setStage("queued");
     setMessage("Preparing your room...");
-    track("generate_started", { roomType: room, style });
     try {
       const imageUrl = file ? await uploadRoomImage(file, controller.signal, setMessage) : preview;
+      if (file) {
+        trackEvent("image_upload_success", {
+          file_type: resolveRoomImageContentType(file) ?? file.type,
+          file_size: file.size,
+        });
+      }
       setMessage("Starting your generation...");
       const response = await fetch("/api/generate", {
         method: "POST",
@@ -140,6 +149,12 @@ export function RoomGenerator() {
       const data = await readApiResponse<JobResponse>(response, "Generation could not start.");
       if (!data.jobId) throw new Error(data.error ?? "Generation could not start.");
       reservedSource.current = data.creditSource ?? null;
+      generationPlan.current = data.plan ?? entitlements?.plan ?? "free";
+      trackEvent("generation_started", {
+        room_type: toAnalyticsValue(room),
+        style: toAnalyticsValue(style),
+        plan: generationPlan.current,
+      });
       track("credit_reserved", { source: data.creditSource ?? "unknown" });
       await pollJob(data.jobId, controller.signal);
     } catch (error) {
@@ -175,7 +190,10 @@ export function RoomGenerator() {
       setStatus(job.status === "queued" ? "queued" : "processing");
       if (job.status === "failed") throw new Error(job.error ?? "Generation failed. Please try again.");
       if (job.status === "completed" && job.resultUrl) {
-        track("generation_completed", { roomType: room, style, generationResult: "completed" });
+        trackEvent("generation_completed", {
+          duration: GENERATION_DURATION_SECONDS,
+          plan: generationPlan.current,
+        });
         if (reservedSource.current === "free") track("free_preview_used");
         window.location.assign(job.resultUrl);
         return;
@@ -185,6 +203,14 @@ export function RoomGenerator() {
         signal.addEventListener("abort", () => { window.clearTimeout(timer); reject(new DOMException("Aborted", "AbortError")); }, { once: true });
       });
     }
+  }
+
+  function trackGenerateClick() {
+    trackEvent("generate_click", {
+      room_type: toAnalyticsValue(room),
+      style: toAnalyticsValue(style),
+      mode: toAnalyticsValue(designScope),
+    });
   }
 
   return (
@@ -300,7 +326,7 @@ export function RoomGenerator() {
                 {status === "queued" || status === "processing" ? <GenerationSteps stage={stage} /> : null}
                 {status === "auth" ? <Link href="/login?next=%2F%23generator" className="mt-2 inline-block font-bold text-[var(--accent)] underline">Continue with email</Link> : null}
                 {status === "upgrade" ? <Link href="/#pricing" className="mt-2 inline-block font-bold text-[var(--accent)] underline">View plans</Link> : null}
-                {status === "error" ? <button type="button" onClick={generate} className="focus-ring mt-2 font-bold text-[var(--accent)] underline">Try again</button> : null}
+                {status === "error" ? <button type="button" onClick={() => { trackGenerateClick(); void generate(); }} className="focus-ring mt-2 font-bold text-[var(--accent)] underline">Try again</button> : null}
               </div>
             </div>
           </div>

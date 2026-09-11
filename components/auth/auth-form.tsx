@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 import { googleOAuthRequest, safeReturnTo } from "@/lib/auth/redirect";
-import { track } from "@/lib/analytics/events";
+import { track, trackEvent } from "@/lib/analytics/events";
 import { resolveSiteUrl } from "@/lib/site";
 
 export function AuthForm({ mode, returnTo = "/#generator", initialMessage = "" }: { mode: "login" | "signup"; returnTo?: string; initialMessage?: string }) {
@@ -82,7 +82,8 @@ export function AuthForm({ mode, returnTo = "/#generator", initialMessage = "" }
         return;
       }
       await fetch("/api/auth/claim", { method: "POST" });
-      track(mode === "signup" ? "signup_completed" : "login_completed", { method: "password" });
+      if (mode === "signup") track("signup_completed", { method: "password" });
+      else trackEvent("login_completed", { provider: "email" });
       window.location.assign(target);
     } catch (error) {
       if (mode === "signup" && process.env.NODE_ENV !== "production") {
