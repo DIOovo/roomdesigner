@@ -31,11 +31,12 @@ type UploadResponse = { path: string; signedUrl: string; imageUrl?: string; erro
 
 const GENERATION_DURATION_SECONDS = 5;
 
-export function RoomGenerator({ initialRoomType = "Living Room" }: { initialRoomType?: (typeof roomTypes)[number] }) {
+export function RoomGenerator({ initialRoomType = "Living Room", lockRoomType = false }: { initialRoomType?: (typeof roomTypes)[number]; lockRoomType?: boolean }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string>(samples[0].src);
-  const [room, setRoom] = useState<(typeof roomTypes)[number]>(initialRoomType);
+  const [selectedRoom, setRoom] = useState<(typeof roomTypes)[number]>(initialRoomType);
+  const room = lockRoomType ? initialRoomType : selectedRoom;
   const [style, setStyle] = useState("Japandi");
   const [designScope, setDesignScope] = useState<DesignScope>("keep-layout");
   const [status, setStatus] = useState<Status>("idle");
@@ -70,17 +71,19 @@ export function RoomGenerator({ initialRoomType = "Living Room" }: { initialRoom
         if (!data.roomType || !roomTypes.includes(data.roomType as (typeof roomTypes)[number]) || !data.style || !styles.some((item) => item.name === data.style) || !isDesignScope(data.designScope)) {
           throw new Error("Previous settings are no longer available.");
         }
-        setRoom(data.roomType as (typeof roomTypes)[number]);
+        if (!lockRoomType) setRoom(data.roomType as (typeof roomTypes)[number]);
         setStyle(data.style);
         setDesignScope(data.designScope);
-        setReuseMessage("Previous room type, style, and design scope restored. Choose a photo, then Generate to create a new version.");
+        setReuseMessage(lockRoomType
+          ? "Previous style and design scope restored. Choose a photo, then Generate to create a new version."
+          : "Previous room type, style, and design scope restored. Choose a photo, then Generate to create a new version.");
       })
       .catch((error) => {
         if (error instanceof DOMException && error.name === "AbortError") return;
         setReuseMessage(error instanceof Error ? error.message : "Previous settings could not be restored.");
       });
     return () => controller.abort();
-  }, [reuseId]);
+  }, [reuseId, lockRoomType]);
 
   const validateFile = useCallback((next: File) => {
     if (!resolveRoomImageContentType(next)) {
@@ -257,15 +260,15 @@ export function RoomGenerator({ initialRoomType = "Living Room" }: { initialRoom
       </section>
 
       <section aria-label="Room design settings" className="mt-10 min-w-0 border-t border-[var(--line)] pt-9 lg:mt-0 lg:border-l lg:border-t-0 lg:pl-12 lg:pt-0">
-        <div className="grid gap-3 sm:grid-cols-[1fr_15rem] sm:items-center">
+        {!lockRoomType ? <div className="grid gap-3 sm:grid-cols-[1fr_15rem] sm:items-center">
           <div><p className="text-sm font-semibold text-[var(--ink)]">Room type</p><p className="mt-1 text-xs leading-5 text-[var(--muted)]">Choose the space you want to transform.</p></div>
           <label className="sr-only" htmlFor="room-type">Room type</label>
           <select id="room-type" value={room} onChange={(event) => { const roomType = event.target.value as typeof room; setRoom(roomType); track("room_type_selected", { roomType }); }} className="focus-ring h-12 w-full rounded-lg border border-[var(--line)] bg-[color:var(--surface)]/70 px-4 text-sm font-semibold text-[var(--ink)] hover:border-[var(--muted)]">
               {roomTypes.map((item) => <option key={item}>{item}</option>)}
           </select>
-        </div>
+        </div> : null}
 
-        <div className="mt-5 border-t border-[var(--line)] pt-5">
+        <div className={lockRoomType ? "" : "mt-5 border-t border-[var(--line)] pt-5"}>
           <div className="mb-3"><p className="text-sm font-semibold text-[var(--ink)]">Design scope</p><p className="mt-1 text-xs leading-5 text-[var(--muted)]">Decide how much of the room can change.</p></div>
           <div className="grid gap-1 rounded-xl bg-[var(--surface-2)] p-1 sm:grid-cols-2" role="radiogroup" aria-label="Design scope">
             <button

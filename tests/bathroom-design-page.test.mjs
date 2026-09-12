@@ -4,42 +4,73 @@ import test from "node:test";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
-test("bathroom design draft has exact metadata, one H1, and a Bathroom-default existing generator", async () => {
+const requiredHeadings = [
+  "Free AI Bathroom Design Tool",
+  "Bathroom Design Ideas by Style",
+  "Small Bathroom Design That Feels Bigger",
+  "Modern Bathroom Design",
+  "Bathroom Remodel Ideas — Real Before &amp; After Makeovers",
+  "Luxury Bathroom Design",
+  "How AI Bathroom Design Works",
+];
+
+test("bathroom design page has exact metadata, one H1, and a Bathroom-default generator", async () => {
   const [page, generator] = await Promise.all([
     read("app/bathroom-design/page.tsx"),
     read("components/generator/room-generator.tsx"),
   ]);
-  assert.match(page, /Bathroom Design — See Your Bathroom Before & After \| RoomFacelift/);
-  assert.match(page, /Upload a photo of your bathroom and watch it transform with AI\. Free bathroom design ideas in before & after video\. No signup to try\./);
+  assert.match(page, /Bathroom Design — Before & After Video \| RoomFacelift/);
+  assert.match(page, /Upload a photo of your bathroom and watch AI redesign it in a smooth before & after video\. Free preview, no login for the first one\./);
   assert.equal((page.match(/<h1\b/g) ?? []).length, 1);
   assert.match(page, /Bathroom Design: See Your Bathroom Before &amp; After/);
-  assert.match(page, /<RoomGenerator initialRoomType="Bathroom" \/>/);
+  assert.match(page, /<RoomGenerator initialRoomType="Bathroom" lockRoomType \/>/);
+  assert.match(page, /First preview free, no login\. 480p with watermark\./);
   assert.match(generator, /initialRoomType = "Living Room"/);
 });
 
-test("bathroom design draft includes six styles, three honest example slots, education, and five FAQs", async () => {
+test("bathroom design page renders the eight official styles and all required H2 sections", async () => {
   const page = await read("app/bathroom-design/page.tsx");
-  for (const title of ["Modern Bathroom", "Farmhouse Bathroom", "Scandinavian Bathroom", "Luxury Marble Bathroom", "Small Bathroom Storage", "Japandi Bathroom"]) assert.match(page, new RegExp(title));
-  assert.equal((page.match(/title: ".*Bathroom Transformation"/g) ?? []).length, 3);
-  assert.match(page, /How AI Bathroom Design Helps You Plan a Remodel/);
-  assert.equal((page.match(/question: "/g) ?? []).length, 5);
-  assert.match(page, /No unrelated room photos or invented customer results/);
+  for (const style of ["Modern", "Scandinavian", "Japandi", "Luxury", "Farmhouse", "Minimalist", "Coastal", "Industrial"]) assert.match(page, new RegExp(style));
+  for (const heading of requiredHeadings) assert.match(page, new RegExp(heading));
 });
 
-test("bathroom FAQ UI and JSON-LD share one source and render exactly one FAQPage schema", async () => {
+test("bathroom design page renders exactly six FAQs and one shared FAQ source", async () => {
   const page = await read("app/bathroom-design/page.tsx");
+  assert.equal((page.match(/question: "/g) ?? []).length, 6);
   assert.equal((page.match(/"@type": "FAQPage"/g) ?? []).length, 1);
   assert.match(page, /mainEntity: bathroomFaqs\.map/);
   assert.match(page, /\{bathroomFaqs\.map\(\(faq\) =>/);
   assert.equal((page.match(/type="application\/ld\+json"/g) ?? []).length, 1);
 });
 
-test("bathroom design stays local-only with no homepage, sitemap, header, or footer link", async () => {
-  const publicEntryPoints = await Promise.all([
-    "app/page.tsx",
-    "app/sitemap.ts",
-    "components/site-header.tsx",
-    "components/site-footer.tsx",
-  ].map(read));
-  for (const source of publicEntryPoints) assert.doesNotMatch(source, /bathroom-design/);
+test("bathroom design page uses a data-driven case component without inventing makeovers", async () => {
+  const [page, cases] = await Promise.all([
+    read("app/bathroom-design/page.tsx"),
+    read("components/bathroom/remodel-cases.tsx"),
+  ]);
+  assert.match(page, /<BathroomRemodelCases \/>/);
+  assert.match(cases, /bathroomRemodelCases/);
+  assert.match(cases, /beforeImage/);
+  assert.match(cases, /afterVideo/);
+  assert.match(cases, /afterPoster/);
+});
+
+test("bathroom design page exposes natural internal links to home, pricing, and blog", async () => {
+  const page = await read("app/bathroom-design/page.tsx");
+  assert.match(page, /href="\/"/);
+  assert.match(page, /href="\/pricing"/);
+  assert.match(page, /href="\/blog"/);
+});
+
+test("bathroom design is listed in the sitemap and left out of other entry points", async () => {
+  const [sitemap, homepage, header, footer] = await Promise.all([
+    read("app/sitemap.ts"),
+    read("app/page.tsx"),
+    read("components/site-header.tsx"),
+    read("components/site-footer.tsx"),
+  ]);
+  assert.match(sitemap, /bathroom-design/);
+  assert.doesNotMatch(homepage, /bathroom-design/);
+  assert.doesNotMatch(header, /bathroom-design/);
+  assert.doesNotMatch(footer, /bathroom-design/);
 });

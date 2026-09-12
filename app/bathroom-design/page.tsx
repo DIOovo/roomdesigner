@@ -1,139 +1,195 @@
 import Link from "next/link";
-import { FilmSlate, ImageSquare, Sparkle } from "@phosphor-icons/react/dist/ssr";
+import Image from "next/image";
 import { RoomGenerator } from "@/components/generator/room-generator";
+import { BathroomRemodelCases } from "@/components/bathroom/remodel-cases";
 import { publicPageMetadata } from "@/lib/seo";
-import { siteConfig } from "@/lib/site";
+import { siteConfig, styles } from "@/lib/site";
 
-const title = "Bathroom Design — See Your Bathroom Before & After | RoomFacelift";
-const description = "Upload a photo of your bathroom and watch it transform with AI. Free bathroom design ideas in before & after video. No signup to try.";
+const title = "Bathroom Design — Before & After Video | RoomFacelift";
+const description =
+  "Upload a photo of your bathroom and watch AI redesign it in a smooth before & after video. Free preview, no login for the first one.";
 
 export const metadata = publicPageMetadata({ title, description, path: "/bathroom-design" });
 
-const bathroomStyles = [
-  { title: "Modern Bathroom", description: "Clean lines, floating vanity, walk-in shower." },
-  { title: "Farmhouse Bathroom", description: "Shiplap walls, freestanding tub, warm wood." },
-  { title: "Scandinavian Bathroom", description: "White tiles, light oak, minimal fixtures." },
-  { title: "Luxury Marble Bathroom", description: "Marble walls, gold accents, soaking tub." },
-  { title: "Small Bathroom Storage", description: "Space-saving layout, wall-mounted storage." },
-  { title: "Japandi Bathroom", description: "Muted tones, natural stone, zen minimalism." },
-] as const;
+const freePreviewLine = "First preview free, no login. 480p with watermark.";
 
-const transformationSlots = [
-  { title: "Modern Bathroom Transformation", style: "Modern", after: "A cleaner vanity, shower, lighting, and material direction." },
-  { title: "Small Bathroom Transformation", style: "Space-saving", after: "A more efficient storage and fixture concept for a compact room." },
-  { title: "Japandi Bathroom Transformation", style: "Japandi", after: "A calm natural-stone, warm-wood, and muted-color direction." },
+const bathroomStyleGuide = [
+  { name: "Modern", details: "clean lines, floating vanity, walk-in shower" },
+  { name: "Scandinavian", details: "white tiles, light oak, minimal fixtures" },
+  { name: "Japandi", details: "muted tones, natural stone, calm minimalism" },
+  { name: "Luxury", details: "marble surfaces, statement lighting, soaking tub" },
+  { name: "Farmhouse", details: "shiplap walls, freestanding tub, warm wood" },
+  { name: "Minimalist", details: "hidden storage, seamless surfaces, no clutter" },
+  { name: "Coastal", details: "soft blues, light wood, airy and bright" },
+  { name: "Industrial", details: "matte black fixtures, concrete, exposed metal" },
 ] as const;
 
 const bathroomFaqs = [
   {
     question: "How do I redesign my bathroom with AI?",
-    answer: "Upload a clear bathroom photo, keep Bathroom selected as the room type, choose an interior style, and start the generator. RoomFacelift prepares a redesigned final frame and a short before and after transformation video.",
-  },
-  {
-    question: "What bathroom styles can I try?",
-    answer: "You can explore Modern, Farmhouse, Scandinavian, Luxury, Japandi, Minimalist, Coastal, Traditional, and other available RoomFacelift styles. The best direction depends on your room size, existing fixtures, natural light, and remodeling goals.",
+    answer:
+      "Upload one photo of your bathroom, choose a style such as modern, Scandinavian or luxury, and generate your video. Keep layout mode preserves walls, doors and windows so you can compare designs without losing the structure of the room.",
   },
   {
     question: "Is the AI bathroom design free?",
-    answer: "Your first limited preview is free and does not require signup. Free previews include a RoomFacelift watermark. Additional generations and paid export features depend on the current account and plan allowances.",
+    answer:
+      "Your first 5-second 480p preview is available free without an account. After you sign in, you can claim one more limited free preview. Free videos include a watermark and the allowance does not reset daily.",
   },
   {
     question: "Can I see my bathroom before and after?",
-    answer: "Yes. RoomFacelift uses your original bathroom photo as the before frame and the AI redesign as the after frame, then creates a short video that shows the transition between them.",
+    answer:
+      "Yes. Every render is delivered as a before-and-after video, so you can see your original photo and the redesign side by side in one clip.",
+  },
+  {
+    question: "What bathroom design styles can I try?",
+    answer:
+      "Fifteen styles including Modern, Scandinavian, Japandi, Luxury, Farmhouse, Minimalist, Coastal and Industrial. The style list is the same across every room type.",
   },
   {
     question: "Does it work for small bathrooms?",
-    answer: "Yes. A clear, level photo can help you compare visual directions for a small bathroom, including lighter finishes, wall-mounted storage, restrained fixtures, and layouts that feel less crowded. Treat the result as a planning reference rather than measured construction documentation.",
+    answer:
+      "Yes, and small bathrooms are one of the best use cases. Keep layout mode lets you test vanity, tile and lighting changes without changing the room's footprint.",
+  },
+  {
+    question: "Can I use the video with my contractor?",
+    answer:
+      "The video is a concept visualisation for planning and communication, not a construction drawing or a specification. Pro plans include commercial use rights for designers, agents and marketers.",
   },
 ] as const;
 
 export default function BathroomDesignPage() {
-  const faqSchema = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "@id": `${siteConfig.url}/bathroom-design#faq`,
-    url: `${siteConfig.url}/bathroom-design`,
-    mainEntity: bathroomFaqs.map((faq) => ({
-      "@type": "Question",
-      name: faq.question,
-      acceptedAnswer: { "@type": "Answer", text: faq.answer },
-    })),
-  };
+  const pageUrl = `${siteConfig.url}/bathroom-design`;
+  const structuredData = [
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      name: siteConfig.name,
+      url: pageUrl,
+      image: new URL(siteConfig.socialImagePath, `${siteConfig.url}/`).toString(),
+      applicationCategory: "DesignApplication",
+      operatingSystem: "Web",
+      description: siteConfig.description,
+      offers: { "@type": "Offer", price: "0", priceCurrency: "USD", description: "Limited first preview" },
+      featureList: ["AI room design from a photo", "Before and after transformation video", "No-login first preview"],
+      provider: { "@id": `${siteConfig.url}/#organization` },
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "@id": `${pageUrl}#faq`,
+      url: pageUrl,
+      mainEntity: bathroomFaqs.map((faq) => ({
+        "@type": "Question",
+        name: faq.question,
+        acceptedAnswer: { "@type": "Answer", text: faq.answer },
+      })),
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home", item: `${siteConfig.url}/` },
+        { "@type": "ListItem", position: 2, name: "Bathroom Design", item: pageUrl },
+      ],
+    },
+  ];
 
   return (
     <main>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
 
       <section id="bathroom-generator" className="shell py-10 lg:py-16">
         <div className="mb-9 max-w-4xl">
-          <p className="mb-3 text-sm font-semibold text-[var(--accent)]">AI bathroom design from your own photo</p>
+          <p className="mb-3 text-sm font-semibold text-[var(--accent)]">AI bathroom design tool</p>
           <h1 className="text-[clamp(2.6rem,5vw,5.25rem)] leading-[.98]">Bathroom Design: See Your Bathroom Before &amp; After</h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-[var(--muted)]">Upload a photo of your bathroom. Watch it become a whole new space — in video, not a static render.</p>
         </div>
-        <RoomGenerator initialRoomType="Bathroom" />
-        <p className="mt-4 text-sm font-semibold text-[var(--muted)]">First video free, no signup. Watermarked.</p>
+        <RoomGenerator initialRoomType="Bathroom" lockRoomType />
+        <p className="mt-4 text-sm font-semibold text-[var(--muted)]">{freePreviewLine}</p>
       </section>
 
-      <section className="border-y border-[var(--line)] bg-[color:var(--surface)]/35 py-20 md:py-28" aria-labelledby="bathroom-styles-title">
+      <section className="border-y border-[var(--line)] bg-[color:var(--surface)]/35 py-20 md:py-28">
+        <div className="shell grid gap-8 lg:grid-cols-[.9fr_1.1fr]">
+          <h2 className="text-4xl md:text-6xl">Free AI Bathroom Design Tool</h2>
+          <div className="space-y-5 text-[17px] leading-8 text-[var(--muted)]">
+            <p>Try a bathroom design in your browser without installing anything. Upload one photo of your bathroom, pick a style, and RoomFacelift renders a smooth before and after video in about a minute. Your first preview is free and needs no account — no download, no design software, no appointment.</p>
+            <p>
+              Working on another room instead? The <Link href="/" className="font-semibold text-[var(--accent)] underline underline-offset-4 hover:text-[var(--accent-strong)]">AI room design generator</Link> covers living rooms, bedrooms, kitchens and more.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="shell py-20 md:py-28" aria-labelledby="bathroom-styles-title">
+        <div className="max-w-3xl">
+          <p className="mb-3 text-sm font-bold text-[var(--accent)]">Bathroom design ideas</p>
+          <h2 id="bathroom-styles-title" className="text-4xl md:text-6xl">Bathroom Design Ideas by Style</h2>
+          <p className="mt-5 max-w-2xl text-lg leading-8 text-[var(--muted)]">Not sure which direction to take? These are the styles that work best in bathrooms, and you can preview any of them on your own photo in a single click:</p>
+        </div>
+        <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {bathroomStyleGuide.map((item, index) => {
+            const styleAsset = styles.find((s) => s.name === item.name);
+            return (
+              <article key={item.name} className="surface overflow-hidden">
+                {styleAsset ? (
+                  <div className="relative aspect-[16/10] overflow-hidden">
+                    <Image src={styleAsset.image} alt={styleAsset.alt} fill className="object-cover" sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 280px" />
+                  </div>
+                ) : null}
+                <div className="p-5">
+                  <div className="flex items-center justify-between gap-4">
+                    <h3 className="text-xl">{item.name}</h3>
+                    <span className="text-xs font-black text-[var(--muted)]">0{index + 1}</span>
+                  </div>
+                  <p className="mt-3 leading-7 text-[var(--muted)]">{item.details}</p>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="border-y border-[var(--line)] bg-[color:var(--surface)]/35 py-20 md:py-28">
+        <div className="shell grid gap-8 lg:grid-cols-[.9fr_1.1fr]">
+          <h2 className="text-4xl md:text-6xl">Small Bathroom Design That Feels Bigger</h2>
+          <p className="text-[17px] leading-8 text-[var(--muted)]">Small bathrooms respond to a few changes more than others: swap a bulky vanity for a wall-mounted one, take tiles all the way to the ceiling, replace a shower curtain with a glass panel, and keep the palette light. Keep layout mode in RoomFacelift preserves your walls, doors and windows, so you can test these changes without guessing whether the room still works.</p>
+        </div>
+      </section>
+
+      <section className="shell py-20 md:py-28">
+        <div className="grid gap-8 lg:grid-cols-[.9fr_1.1fr]">
+          <h2 className="text-4xl md:text-6xl">Modern Bathroom Design</h2>
+          <p className="text-[17px] leading-8 text-[var(--muted)]">Modern bathrooms are defined by what you remove as much as what you add — handleless cabinets, a single material for walls and floor, and lighting that comes from behind surfaces instead of above them. Preview a modern pass on your photo first, then decide what is worth building.</p>
+        </div>
+      </section>
+
+      <section className="border-y border-[var(--line)] bg-[color:var(--surface)]/35 py-20 md:py-28" aria-labelledby="bathroom-remodel-title">
         <div className="shell">
           <div className="max-w-3xl">
-            <p className="mb-3 text-sm font-bold text-[var(--accent)]">Bathroom design ideas</p>
-            <h2 id="bathroom-styles-title" className="text-4xl md:text-6xl">Six directions for a more considered bathroom.</h2>
-            <p className="mt-5 max-w-2xl text-lg leading-8 text-[var(--muted)]">Start with the mood you want, then compare how fixtures, storage, finishes, and lighting could work together.</p>
+            <p className="mb-3 text-sm font-bold text-[var(--accent)]">Before → after, in motion</p>
+            <h2 id="bathroom-remodel-title" className="text-4xl md:text-6xl">Bathroom Remodel Ideas — Real Before &amp; After Makeovers</h2>
           </div>
-          <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {bathroomStyles.map((style, index) => (
-              <article key={style.title} className="surface min-h-52 p-6 md:p-7">
-                <div className="flex items-center justify-between gap-4">
-                  <span className="grid size-11 place-items-center rounded-xl bg-[var(--surface-2)] text-[var(--accent)]"><Sparkle size={21} weight="bold" /></span>
-                  <span className="text-xs font-black text-[var(--muted)]">0{index + 1}</span>
-                </div>
-                <h3 className="mt-8 text-2xl">{style.title}</h3>
-                <p className="mt-3 leading-7 text-[var(--muted)]">{style.description}</p>
-              </article>
-            ))}
+          <div className="mt-10">
+            <BathroomRemodelCases />
           </div>
         </div>
       </section>
 
-      <section className="shell py-20 md:py-28" aria-labelledby="bathroom-examples-title">
-        <div className="max-w-3xl">
-          <p className="mb-3 text-sm font-bold text-[var(--accent)]">Before → after, designed for video</p>
-          <h2 id="bathroom-examples-title" className="text-4xl md:text-6xl">Bathroom transformation examples.</h2>
-          <p className="mt-5 max-w-2xl text-lg leading-8 text-[var(--muted)]">These prepared example slots show how verified bathroom transformations will be presented. No unrelated room photos or invented customer results are shown in this draft.</p>
-        </div>
-        <div className="mt-12 grid gap-5 lg:grid-cols-3">
-          {transformationSlots.map((example) => (
-            <article key={example.title} className="surface overflow-hidden">
-              <div className="grid grid-cols-2 border-b border-[var(--line)]">
-                <div className="grid min-h-48 place-items-center border-r border-[var(--line)] bg-[var(--surface-2)] p-5 text-center">
-                  <div><ImageSquare size={28} weight="bold" className="mx-auto text-[var(--muted)]" /><p className="mt-3 text-xs font-black uppercase tracking-[.1em] text-[var(--muted)]">Before</p><p className="mt-1 text-sm font-semibold">Original bathroom photo</p></div>
-                </div>
-                <div className="grid min-h-48 place-items-center bg-[color:var(--accent)]/[.07] p-5 text-center">
-                  <div><FilmSlate size={28} weight="fill" className="mx-auto text-[var(--accent)]" /><p className="mt-3 text-xs font-black uppercase tracking-[.1em] text-[var(--accent)]">After video</p><p className="mt-1 text-sm font-semibold">Verified preview slot</p></div>
-                </div>
-              </div>
-              <div className="p-6">
-                <p className="text-xs font-black uppercase tracking-[.1em] text-[var(--accent)]">{example.style}</p>
-                <h3 className="mt-2 text-xl">{example.title}</h3>
-                <p className="mt-3 text-sm leading-6 text-[var(--muted)]">{example.after}</p>
-              </div>
-            </article>
-          ))}
+      <section className="shell py-20 md:py-28">
+        <div className="grid gap-8 lg:grid-cols-[.9fr_1.1fr]">
+          <h2 className="text-4xl md:text-6xl">Luxury Bathroom Design</h2>
+          <p className="text-[17px] leading-8 text-[var(--muted)]">Luxury here is about material honesty: large-format marble or stone, brass or matte black fixtures, a freestanding tub with space around it, and one statement light. Preview the full treatment before committing to a renovation budget.</p>
         </div>
       </section>
 
-      <section className="border-y border-[var(--line)] bg-[color:var(--surface)]/35 py-20 md:py-28" aria-labelledby="ai-remodel-title">
-        <div className="shell grid gap-10 lg:grid-cols-[.72fr_1.28fr]">
-          <div>
-            <p className="mb-3 text-sm font-bold text-[var(--accent)]">Plan before you remodel</p>
-            <h2 id="ai-remodel-title" className="text-4xl md:text-5xl">How AI Bathroom Design Helps You Plan a Remodel</h2>
-          </div>
+      <section className="border-y border-[var(--line)] bg-[color:var(--surface)]/35 py-20 md:py-28">
+        <div className="shell grid gap-8 lg:grid-cols-[.9fr_1.1fr]">
+          <h2 className="text-4xl md:text-6xl">How AI Bathroom Design Works</h2>
           <div className="space-y-5 text-[17px] leading-8 text-[var(--muted)]">
-            <p>Bathroom remodel decisions are unusually connected. A vanity affects circulation, lighting changes how tile reads, and storage can determine whether a small room feels calm or crowded. AI bathroom design gives you a fast way to compare those choices using a photo of the space you already have. Instead of collecting disconnected bathroom design ideas, you can test a coordinated visual direction around your room&apos;s visible proportions and fixed features.</p>
-            <p>A before and after video can be easier to evaluate than a single static render because the transition keeps the original room in context. You can see where the proposed finishes, fixtures, lighting, and furniture direction came from, rather than treating the result as an unrelated inspiration image. RoomFacelift aims to preserve a recognizable camera viewpoint so that the relationship between the existing bathroom and the redesign remains understandable.</p>
-            <p>AI can help explore layout direction, brighter or warmer lighting, material combinations, vanity styles, storage approaches, and an overall design language. It is especially useful early in a bathroom remodel, when you are deciding whether Modern, Scandinavian, Farmhouse, Luxury, or Japandi ideas suit the room. For a small bathroom design, lighter surfaces, restrained contrast, wall-mounted storage, simple fixtures, and a visually quieter palette can help the space feel more open.</p>
-            <p>The generated design should be treated as a renovation reference, not a construction plan. It does not confirm measurements, plumbing positions, waterproofing, building codes, product availability, or structural feasibility. Share useful concepts with a qualified designer or contractor, verify dimensions and technical requirements, and use the video to communicate the atmosphere and priorities you want to achieve.</p>
+            <p>You upload one photo. RoomFacelift reads the room&apos;s geometry — walls, floor, fixtures, window placement — then regenerates the scene in the style you chose, keeping the bones of the room intact. The output is a five-second before-and-after video that shows the transformation in motion, which is easier to judge than a single still: you can see how light moves through the space and how the fixtures sit in the layout.</p>
+            <p>
+              Ready for watermark-free HD exports? See <Link href="/pricing" className="font-semibold text-[var(--accent)] underline underline-offset-4 hover:text-[var(--accent-strong)]">pricing</Link>. Browse our <Link href="/blog" className="font-semibold text-[var(--accent)] underline underline-offset-4 hover:text-[var(--accent-strong)]">AI room design guides</Link> for more ideas.
+            </p>
           </div>
         </div>
       </section>
@@ -151,7 +207,7 @@ export default function BathroomDesignPage() {
           </div>
         </div>
         <div className="mt-12 border-t border-[var(--line)] pt-8 text-center">
-          <p className="text-lg font-bold">Ready to explore a direction for your bathroom?</p>
+          <p className="text-lg font-bold">Try a direction for your own bathroom.</p>
           <Link href="#bathroom-generator" className="focus-ring mt-4 inline-flex rounded-lg bg-[var(--accent)] px-6 py-3 text-sm font-black text-[var(--on-accent)] hover:bg-[var(--accent-strong)]">Try your bathroom photo</Link>
         </div>
       </section>
