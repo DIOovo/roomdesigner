@@ -10,6 +10,7 @@ import {
   validateRoomImageSize,
 } from "./input-upload-validation";
 import { downloadRemoteAsset } from "./remote-download";
+import { finalizeSanitizedRoomImage } from "./sanitize-room-image";
 
 type AdminClient = NonNullable<ReturnType<typeof getSupabaseAdmin>>;
 
@@ -27,10 +28,13 @@ export async function createInputUpload(input: {
 
 export async function signUploadedInput(input: { admin: AdminClient; path: string; ownerId: string }) {
   if (!isOwnedPendingInputPath(input.path, input.ownerId)) throw new Error("The uploaded room photo is not valid for this session.");
-  await assertStoredInput(input.admin, input.path);
-  const signed = await input.admin.storage.from("generation-inputs").createSignedUrl(input.path, 60 * 60);
-  if (signed.error) throw new Error("The room photo could not be made available for generation.");
-  return signed.data.signedUrl;
+  const storage = input.admin.storage.from("generation-inputs");
+  return finalizeSanitizedRoomImage({
+    storage,
+    path: input.path,
+    inspect: () => assertStoredInput(input.admin, input.path),
+    verify: () => assertStoredInput(input.admin, input.path),
+  });
 }
 
 export async function resolveSubmittedInputFrame(input: {
@@ -89,7 +93,7 @@ async function assertStoredInput(admin: AdminClient, path: string) {
 
   if (isSupportedRoomImageContentType(storedContentType)) {
     logInputValidation({ path, storedContentType, detectedFormat: storedContentType, validationSource: "metadata", status: "accepted" });
-    return;
+    return storedContentType;
   }
   if (!needsMagicByteValidation(storedContentType)) {
     logInputValidation({ path, storedContentType, detectedFormat: "unknown", validationSource: "metadata", status: "rejected-format" });
@@ -103,6 +107,7 @@ async function assertStoredInput(admin: AdminClient, path: string) {
     throw new Error("Only PNG and JPG images are accepted.");
   }
   logInputValidation({ path, storedContentType: storedContentType || "missing", detectedFormat, validationSource: "magic-bytes", status: "accepted" });
+  return detectedFormat;
 }
 
 async function readStoredInputPrefix(admin: AdminClient, path: string) {

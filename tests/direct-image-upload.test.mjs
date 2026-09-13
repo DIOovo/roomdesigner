@@ -89,6 +89,8 @@ test("generator uploads to Storage first and sends only a lightweight JSON gener
   assert.match(generateRoute, /imageUrl\.startsWith\("data:"\)|imageUrl\.includes\("base64,"\)/);
   assert.match(uploadRoute, /createInputUpload/);
   assert.match(uploadRoute, /signUploadedInput/);
+  assert.match(source("lib/assets/frame-assets.ts"), /finalizeSanitizedRoomImage/);
+  assert.match(source("lib/assets/sanitize-room-image.ts"), /download[\s\S]+sanitizeRoomImage[\s\S]+upload[\s\S]+verify[\s\S]+createSignedUrl/);
   assert.match(generator, /uploadBody\.append\("", typedFile, typedFile\.name\)/);
   assert.match(generator, /new File\(\[file\], file\.name, \{ type: contentType/);
   assert.match(source("lib/assets/frame-assets.ts"), /object\.contentType \?\? object\.metadata\?\.mimetype/);
