@@ -54,7 +54,7 @@ export function toAnalyticsValue(value: string) {
 }
 
 const allowedProperties = new Set([
-  "authenticated", "creditSource", "duration", "file_size", "file_type", "generationResult", "method", "mode", "plan", "price", "provider", "room_type", "roomType", "sample", "sizeBucket", "source", "style", "type", "watermarked",
+  "authenticated", "creditSource", "failure_stage", "file_size", "file_type", "method", "plan", "price", "provider", "reason", "room_type", "sample", "scope", "sizeBucket", "source", "style", "surface", "type", "watermarked",
 ]);
 
 export function sanitizeAnalyticsProperties(properties: Record<string, unknown>) {
