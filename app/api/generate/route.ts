@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { ANONYMOUS_COOKIE, anonymousStorageId, createAnonymousIdentity, readAnonymousIdentity } from "@/lib/auth/anonymous";
-import { resolveSubmittedInputFrame } from "@/lib/assets/frame-assets";
+import { resolveSubmittedInputFrame, resolveSubmittedReferenceFrame } from "@/lib/assets/frame-assets";
 import { claimAnonymousUsage } from "@/lib/credits/claim-anonymous";
 import { readAnonymousUsage } from "@/lib/credits/anonymous";
 import { releaseGenerationCredit, reserveGenerationCredit } from "@/lib/credits/reservations";
@@ -21,15 +21,20 @@ export async function POST(request: Request) {
     if (!request.headers.get("content-type")?.includes("application/json")) {
       return NextResponse.json({ error: "Generation requests must use JSON." }, { status: 415 });
     }
-    const body = await request.json() as { imageUrl?: unknown; roomType?: unknown; style?: unknown; scope?: unknown };
+    const body = await readGenerationBody(request);
+    if (!body) return NextResponse.json({ error: "The generation request is not valid." }, { status: 400 });
     const imageUrl = typeof body.imageUrl === "string" ? body.imageUrl : "";
+    const referenceImageUrl = typeof body.referenceImageUrl === "string" ? body.referenceImageUrl : "";
     const roomType = typeof body.roomType === "string" ? body.roomType : "Living Room";
     const style = typeof body.style === "string" ? body.style : "Japandi";
     const designScope = parseRequestedDesignScope(body.scope);
     const clientRequestId = request.headers.get("idempotency-key") ?? "";
     if (!designScope) return NextResponse.json({ error: "Choose a valid design scope." }, { status: 400 });
+    if (body.referenceImageUrl !== undefined && typeof body.referenceImageUrl !== "string") return NextResponse.json({ error: "Choose a valid reference image." }, { status: 400 });
     const validation = validateInput(imageUrl, clientRequestId);
     if (validation) return NextResponse.json({ error: validation }, { status: 400 });
+    const referenceValidation = validateReferenceInput(referenceImageUrl);
+    if (referenceValidation) return NextResponse.json({ error: referenceValidation }, { status: 400 });
 
     const serverClient = await getSupabaseServer();
     const user = serverClient ? (await serverClient.auth.getUser()).data.user : null;
@@ -53,6 +58,7 @@ export async function POST(request: Request) {
 
     if (!admin) {
       if (!isMock) return NextResponse.json({ error: "Supabase must be configured before real generation can start." }, { status: 503 });
+      if (referenceImageUrl) return NextResponse.json({ error: "Reference image uploads require Supabase Storage." }, { status: 503 });
       if (!imageUrl.startsWith("/samples/")) return NextResponse.json({ error: "Photo uploads require Supabase Storage." }, { status: 503 });
       return createStatelessMockJob({ roomType, style, designScope, imageUrl, anonymousToken });
     }
@@ -65,6 +71,14 @@ export async function POST(request: Request) {
 
     const jobId = crypto.randomUUID();
     const firstFrame = await resolveSubmittedInputFrame({ admin, imageUrl, ownerId });
+    let referenceFrame = null;
+    if (referenceImageUrl) {
+      try {
+        referenceFrame = await resolveSubmittedReferenceFrame({ admin, imageUrl: referenceImageUrl, ownerId });
+      } catch (error) {
+        return NextResponse.json({ error: safeReferenceInputError(error) }, { status: 400 });
+      }
+    }
     const inserted = await admin.from("generation_jobs").insert({
       id: jobId,
       user_id: user?.id ?? null,
@@ -83,6 +97,7 @@ export async function POST(request: Request) {
       priority_queue: false,
       first_frame_url: firstFrame.path ? null : firstFrame.url,
       first_frame_path: firstFrame.path,
+      reference_frame_path: referenceFrame?.path ?? null,
       provider: process.env.VIDEO_PROVIDER ?? "mock",
     });
     if (inserted.error) {
@@ -101,6 +116,7 @@ export async function POST(request: Request) {
     if (!reservation.success) {
       await admin.from("generation_jobs").delete().eq("id", jobId);
       if (firstFrame.path) await admin.storage.from("generation-inputs").remove([firstFrame.path]);
+      if (referenceFrame?.path) await admin.storage.from("generation-inputs").remove([referenceFrame.path]);
       return reservation.errorCode === "requires_auth" ? authRequired() : upgradeRequired();
     }
     try {
@@ -109,6 +125,7 @@ export async function POST(request: Request) {
       await releaseGenerationCredit(jobId);
       await admin.from("generation_jobs").delete().eq("id", jobId);
       if (firstFrame.path) await admin.storage.from("generation-inputs").remove([firstFrame.path]);
+      if (referenceFrame?.path) await admin.storage.from("generation-inputs").remove([referenceFrame.path]);
       throw error;
     }
 
@@ -139,6 +156,35 @@ function validateInput(imageUrl: string, requestId: string) {
   if (!imageUrl || imageUrl.length > 4096 || imageUrl.startsWith("data:") || imageUrl.includes("base64,")) return "Please upload a room photo or choose a valid sample.";
   if (imageUrl.startsWith("/samples/") && imageUrl.includes("..")) return "Please choose a valid sample.";
   return null;
+}
+
+function validateReferenceInput(imageUrl: string) {
+  if (!imageUrl) return null;
+  if (imageUrl.length > 4096 || imageUrl.startsWith("data:") || imageUrl.includes("base64,") || imageUrl.startsWith("/samples/")) return "Please upload a valid PNG or JPG reference image.";
+  try {
+    const url = new URL(imageUrl);
+    if (url.protocol !== "https:" || imageUrl !== imageUrl.trim()) return "Please upload a valid PNG or JPG reference image.";
+  } catch {
+    return "Please upload a valid PNG or JPG reference image.";
+  }
+  return null;
+}
+
+async function readGenerationBody(request: Request) {
+  try {
+    const body = await request.json();
+    return body && typeof body === "object" && !Array.isArray(body)
+      ? body as { imageUrl?: unknown; referenceImageUrl?: unknown; roomType?: unknown; style?: unknown; scope?: unknown }
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function safeReferenceInputError(error: unknown) {
+  const message = error instanceof Error ? error.message : "";
+  if (message === "Only PNG and JPG images are accepted." || message === "The image must be 10MB or smaller." || message === "Upload could not be verified. Please upload the image again." || message === "Please upload the reference image again.") return message;
+  return "The reference image could not be verified. Please upload it again.";
 }
 
 function mockAfterPath(roomType: string) {

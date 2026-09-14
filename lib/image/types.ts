@@ -1,5 +1,6 @@
 export type GenerateAfterFrameInput = {
   firstFrame: string;
+  referenceImage?: string;
   roomType: string;
   style: string;
   prompt: string;

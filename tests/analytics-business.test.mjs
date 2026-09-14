@@ -83,7 +83,7 @@ test("room-generator delegates to semantic helpers and preserves the upload even
   assert.doesNotMatch(generator, /toAnalyticsValue/);
   assert.match(generator, /failureStage\.current/);
   assert.match(generator, /surface = "home"/);
-  assert.match(generator, /body: JSON\.stringify\(\{ imageUrl, roomType: room, style, scope: designScope \}\)/);
+  assert.match(generator, /body: JSON\.stringify\(\{ imageUrl, \.\.\.\(referenceImageUrl \? \{ referenceImageUrl \} : \{\}\), roomType: room, style, scope: designScope \}\)/);
   const uploadEvent = generator.match(/trackEvent\("image_upload_success", \{[\s\S]*?\}\);/)?.[0] ?? "";
   assert.doesNotMatch(uploadEvent, /imageUrl|signedUrl|userId|email/);
 });

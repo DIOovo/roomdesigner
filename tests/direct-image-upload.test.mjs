@@ -5,6 +5,7 @@ import {
   detectRoomImageContentType,
   MAX_ROOM_IMAGE_BYTES,
   isOwnedPendingInputPath,
+  isOwnedReferencePendingInputPath,
   isSupportedRoomImageContentType,
   needsMagicByteValidation,
   resolveRoomImageContentType,
@@ -76,13 +77,21 @@ test("signed input URLs resolve only to owned pending paths", () => {
   assert.equal(storagePathFromSignedImageUrl(url.replace("project.supabase.co", "attacker.example"), "https://project.supabase.co"), null);
 });
 
+test("reference uploads use a distinct owner-bound pending namespace", () => {
+  const owner = "1cda71b2-1c31-46d7-b19f-180d577e8282";
+  const path = `${owner}/reference-pending/991aa2c5-e217-49ba-941c-22d22084d143.png`;
+  assert.equal(isOwnedReferencePendingInputPath(path, owner), true);
+  assert.equal(isOwnedReferencePendingInputPath(path, "another-user"), false);
+  assert.equal(isOwnedPendingInputPath(path, owner), false);
+});
+
 test("generator uploads to Storage first and sends only a lightweight JSON generation payload", () => {
   const generator = source("components/generator/room-generator.tsx");
   const generateRoute = source("app/api/generate/route.ts");
   const uploadRoute = source("app/api/uploads/room-image/route.ts");
 
   assert.match(generator, /fetch\(prepared\.signedUrl/);
-  assert.match(generator, /JSON\.stringify\(\{ imageUrl, roomType: room, style, scope: designScope \}\)/);
+  assert.match(generator, /JSON\.stringify\(\{ imageUrl, \.\.\.\(referenceImageUrl \? \{ referenceImageUrl \} : \{\}\), roomType: room, style, scope: designScope \}\)/);
   assert.doesNotMatch(generator, /body\.append\("image"|readAsDataURL|data:image/);
   assert.match(generateRoute, /await request\.json\(\)/);
   assert.doesNotMatch(generateRoute, /request\.formData\(\)|form\.get\("image"\)|instanceof File/);
@@ -90,6 +99,7 @@ test("generator uploads to Storage first and sends only a lightweight JSON gener
   assert.match(uploadRoute, /createInputUpload/);
   assert.match(uploadRoute, /signUploadedInput/);
   assert.match(source("lib/assets/frame-assets.ts"), /finalizeSanitizedRoomImage/);
+  assert.match(source("lib/assets/frame-assets.ts"), /kind === "reference" \? "reference-pending" : "pending"/);
   assert.match(source("lib/assets/sanitize-room-image.ts"), /download[\s\S]+sanitizeRoomImage[\s\S]+upload[\s\S]+verify[\s\S]+createSignedUrl/);
   assert.match(generator, /uploadBody\.append\("", typedFile, typedFile\.name\)/);
   assert.match(generator, /new File\(\[file\], file\.name, \{ type: contentType/);

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowRight, Check, FilmStrip, ImageSquare, UploadSimple, WarningCircle } from "@phosphor-icons/react";
+import { ArrowRight, Check, FilmStrip, ImageSquare, UploadSimple, WarningCircle, X } from "@phosphor-icons/react";
 import { roomTypes, samples, styles } from "@/lib/site";
 import { track, trackEvent } from "@/lib/analytics/events";
 import { trackGenerateClick, trackGenerationCompleted, trackGenerationFailed, trackGenerationStarted, trackRoomTypeSelected, trackStyleSelected } from "@/lib/analytics/generator-events";
@@ -30,11 +30,23 @@ type JobResponse = {
 type ReuseResponse = { roomType?: string; style?: string; designScope?: string; error?: string };
 type UploadResponse = { path: string; signedUrl: string; imageUrl?: string; error?: string; requiresAuth?: boolean; requiresUpgrade?: boolean };
 
-export function RoomGenerator({ surface = "home" }: { surface?: "home" | "bathroom_design" }) {
+export function RoomGenerator({
+  initialRoomType = "Living Room",
+  lockRoomType = false,
+  surface = "home",
+}: {
+  initialRoomType?: (typeof roomTypes)[number];
+  lockRoomType?: boolean;
+  surface?: "home" | "bathroom_design";
+}) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const referenceInputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string>(samples[0].src);
-  const [room, setRoom] = useState<(typeof roomTypes)[number]>("Living Room");
+  const [selectedRoom, setRoom] = useState<(typeof roomTypes)[number]>(initialRoomType);
+  const room = lockRoomType ? initialRoomType : selectedRoom;
+  const [referenceFile, setReferenceFile] = useState<File | null>(null);
+  const [referencePreview, setReferencePreview] = useState<string | null>(null);
   const [style, setStyle] = useState("Japandi");
   const [designScope, setDesignScope] = useState<DesignScope>("keep-layout");
   const [status, setStatus] = useState<Status>("idle");
@@ -56,6 +68,10 @@ export function RoomGenerator({ surface = "home" }: { surface?: "home" | "bathro
   }, []);
 
   useEffect(() => {
+    return () => { if (referencePreview?.startsWith("blob:")) URL.revokeObjectURL(referencePreview); };
+  }, [referencePreview]);
+
+  useEffect(() => {
     const id = new URLSearchParams(window.location.search).get("reuse");
     if (id) setReuseId(id);
   }, []);
@@ -70,17 +86,17 @@ export function RoomGenerator({ surface = "home" }: { surface?: "home" | "bathro
         if (!data.roomType || !roomTypes.includes(data.roomType as (typeof roomTypes)[number]) || !data.style || !styles.some((item) => item.name === data.style) || !isDesignScope(data.designScope)) {
           throw new Error("Previous settings are no longer available.");
         }
-        setRoom(data.roomType as (typeof roomTypes)[number]);
+        if (!lockRoomType) setRoom(data.roomType as (typeof roomTypes)[number]);
         setStyle(data.style);
         setDesignScope(data.designScope);
-        setReuseMessage("Previous room type, style, and design scope restored. Choose a photo, then Generate to create a new version.");
+        setReuseMessage(lockRoomType ? "Previous style and design scope restored. Choose a photo, then Generate to create a new bathroom version." : "Previous room type, style, and design scope restored. Choose a photo, then Generate to create a new version.");
       })
       .catch((error) => {
         if (error instanceof DOMException && error.name === "AbortError") return;
         setReuseMessage(error instanceof Error ? error.message : "Previous settings could not be restored.");
       });
     return () => controller.abort();
-  }, [reuseId]);
+  }, [reuseId, lockRoomType]);
 
   const validateFile = useCallback((next: File) => {
     if (!resolveRoomImageContentType(next)) {
@@ -95,6 +111,24 @@ export function RoomGenerator({ surface = "home" }: { surface?: "home" | "bathro
     }
     setFile(next);
     setPreview(URL.createObjectURL(next));
+    setStatus("idle");
+    setMessage("");
+    return true;
+  }, []);
+
+  const validateReferenceFile = useCallback((next: File) => {
+    if (!resolveRoomImageContentType(next)) {
+      setStatus("error");
+      setMessage("Unsupported image format. Use JPG or PNG.");
+      return false;
+    }
+    if (next.size > 10 * 1024 * 1024) {
+      setStatus("error");
+      setMessage("Reference image must be 10MB or smaller.");
+      return false;
+    }
+    setReferenceFile(next);
+    setReferencePreview(URL.createObjectURL(next));
     setStatus("idle");
     setMessage("");
     return true;
@@ -140,12 +174,13 @@ export function RoomGenerator({ surface = "home" }: { surface?: "home" | "bathro
           file_size: file.size,
         });
       }
+      const referenceImageUrl = referenceFile ? await uploadInputImage(referenceFile, "reference", controller.signal, setMessage) : undefined;
       setMessage("Starting your generation...");
       failureStage.current = "generation";
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "content-type": "application/json", "idempotency-key": crypto.randomUUID() },
-        body: JSON.stringify({ imageUrl, roomType: room, style, scope: designScope }),
+        body: JSON.stringify({ imageUrl, ...(referenceImageUrl ? { referenceImageUrl } : {}), roomType: room, style, scope: designScope }),
         signal: controller.signal,
       });
       const data = await readApiResponse<JobResponse>(response, "Generation could not start.");
@@ -223,6 +258,10 @@ export function RoomGenerator({ surface = "home" }: { surface?: "home" | "bathro
   return (
     <div className="grid min-w-0 lg:grid-cols-[minmax(0,.96fr)_minmax(500px,1.04fr)] lg:items-start">
       <section aria-label="Room photo" className="min-w-0 lg:sticky lg:top-24 lg:pr-12">
+        <div className="mb-3">
+          <p className="text-sm font-semibold text-[var(--ink)]">Your room</p>
+          <p className="mt-1 text-xs leading-5 text-[var(--muted)]">Upload the room you want to redesign.</p>
+        </div>
         <div className="relative aspect-[4/3] overflow-hidden rounded-[14px] bg-[var(--surface-2)] shadow-[0_20px_60px_rgba(24,43,34,.12)] sm:aspect-[16/10] lg:aspect-[4/3]">
           <Image src={preview} alt="Selected room ready for AI redesign" fill priority className="object-cover" sizes="(max-width:1024px) 100vw, 42vw" />
           <div className="absolute inset-x-4 top-4 flex items-center justify-between text-xs font-semibold sm:inset-x-5 sm:top-5">
@@ -233,6 +272,7 @@ export function RoomGenerator({ surface = "home" }: { surface?: "home" | "bathro
         <input
           ref={inputRef}
           type="file"
+          aria-label="Room photo"
           accept="image/png,image/jpeg"
           className="sr-only"
           onChange={(event) => { const selected = event.target.files?.[0]; if (selected) { track("upload_started", { type: selected.type }); validateFile(selected); } }}
@@ -264,12 +304,43 @@ export function RoomGenerator({ surface = "home" }: { surface?: "home" | "bathro
       </section>
 
       <section aria-label="Room design settings" className="mt-10 min-w-0 border-t border-[var(--line)] pt-9 lg:mt-0 lg:border-l lg:border-t-0 lg:pl-12 lg:pt-0">
-        <div className="grid gap-3 sm:grid-cols-[1fr_15rem] sm:items-center">
+        {!lockRoomType ? <div className="grid gap-3 sm:grid-cols-[1fr_15rem] sm:items-center">
           <div><p className="text-sm font-semibold text-[var(--ink)]">Room type</p><p className="mt-1 text-xs leading-5 text-[var(--muted)]">Choose the space you want to transform.</p></div>
           <label className="sr-only" htmlFor="room-type">Room type</label>
           <select id="room-type" value={room} onChange={(event) => { const roomType = event.target.value as typeof room; setRoom(roomType); trackRoomTypeSelected(roomType); }} className="focus-ring h-12 w-full rounded-lg border border-[var(--line)] bg-[color:var(--surface)]/70 px-4 text-sm font-semibold text-[var(--ink)] hover:border-[var(--muted)]">
               {roomTypes.map((item) => <option key={item}>{item}</option>)}
           </select>
+        </div> : null}
+
+        <div className={`${lockRoomType ? "" : "mt-5 border-t border-[var(--line)] pt-5"}`}>
+          <div className="mb-3 flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-[var(--ink)]">Copy a style <span className="ml-1.5 inline-block rounded-full bg-[var(--surface-2)] px-2 py-0.5 align-middle text-[10px] font-bold uppercase tracking-[.06em] text-[var(--muted)]">Optional</span></p>
+              <p className="mt-1 text-xs leading-5 text-[var(--muted)]">Upload an inspiration photo and we&apos;ll use its colors, materials, furniture style, and mood while keeping your room as the base.</p>
+            </div>
+            {referenceFile ? <button type="button" onClick={() => { setReferenceFile(null); setReferencePreview(null); }} className="focus-ring inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--ink)]"><X size={14} weight="bold" /> Remove</button> : null}
+          </div>
+          <input
+            ref={referenceInputRef}
+            type="file"
+            aria-label="Reference image"
+            accept="image/png,image/jpeg"
+            className="sr-only"
+            onChange={(event) => { const selected = event.target.files?.[0]; if (selected) validateReferenceFile(selected); event.currentTarget.value = ""; }}
+          />
+          <button
+            type="button"
+            onClick={() => referenceInputRef.current?.click()}
+            onDragOver={(event) => event.preventDefault()}
+            onDrop={(event) => { event.preventDefault(); const dropped = event.dataTransfer.files[0]; if (dropped) validateReferenceFile(dropped); }}
+            className="focus-ring flex min-h-20 w-full items-center gap-4 rounded-lg border border-dashed border-[var(--line)] bg-[color:var(--surface)]/45 p-3 text-left hover:border-[var(--muted)] hover:bg-[color:var(--surface)]/70"
+          >
+            {referencePreview ? <span className="relative aspect-[4/3] w-16 shrink-0 overflow-hidden rounded-md bg-[var(--surface-2)] sm:w-20"><Image src={referencePreview} alt="Selected interior style reference" fill className="object-cover" sizes="80px" /></span> : <span className="grid size-12 shrink-0 place-items-center rounded-lg bg-[var(--surface-2)] text-[var(--accent)]"><ImageSquare size={22} weight="duotone" /></span>}
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold text-[var(--ink)]">{referenceFile ? "Replace reference image" : "Upload reference image"}</span>
+              {referenceFile ? <span className="mt-1 block truncate text-xs text-[var(--muted)]">{referenceFile.name}</span> : <span className="mt-1 block text-xs leading-5 text-[var(--muted)]">PNG/JPG · 10MB max · Ideas: Pinterest, Instagram, hotel rooms, interiors you love</span>}
+            </span>
+          </button>
         </div>
 
         <div className="mt-5 border-t border-[var(--line)] pt-5">
@@ -296,6 +367,7 @@ export function RoomGenerator({ surface = "home" }: { surface?: "home" | "bathro
               <span className="mt-1 block text-xs leading-5 text-[var(--muted)]">Allow larger design changes for concept exploration.</span>
             </button>
           </div>
+          {referenceFile ? <p className="mt-3 text-xs leading-5 text-[var(--muted)]">{designScope === "keep-layout" ? "Keep your room structure and viewpoint while applying the reference style." : "Allow more creative layout changes while keeping the same room and camera viewpoint."}</p> : null}
         </div>
         <div className="mt-5 border-t border-[var(--line)] pt-5">
           <div className="mb-3 flex items-end justify-between gap-4"><div><p className="text-sm font-semibold text-[var(--ink)]">Style</p><p className="mt-1 text-xs leading-5 text-[var(--muted)]">Choose the visual direction for your room.</p></div><p className="shrink-0 text-xs font-semibold text-[var(--accent)]">{selectedStyleLabel}</p></div>
@@ -315,6 +387,7 @@ export function RoomGenerator({ surface = "home" }: { surface?: "home" | "bathro
             </button>
           ))}
           </div>
+          {referenceFile ? <p className="mt-3 text-xs leading-5 text-[var(--muted)]">Your reference image takes priority when its visual style differs from the selected preset.</p> : null}
         </div>
 
         {reuseMessage ? <p className="mt-6 rounded-lg bg-[var(--surface-2)] px-4 py-3 text-xs font-medium leading-5 text-[var(--muted)]" role="status">{reuseMessage}</p> : null}
@@ -349,17 +422,22 @@ function generateLabel(entitlements: UserEntitlements | null) {
 }
 
 async function uploadRoomImage(file: File, signal: AbortSignal, setMessage: (message: string) => void) {
+  return uploadInputImage(file, "room", signal, setMessage);
+}
+
+async function uploadInputImage(file: File, kind: "room" | "reference", signal: AbortSignal, setMessage: (message: string) => void) {
   const contentType = resolveRoomImageContentType(file);
   if (!contentType) throw new Error("Only PNG and JPG images are accepted.");
   const typedFile = file.type === contentType ? file : new File([file], file.name, { type: contentType, lastModified: file.lastModified });
-  setMessage("Uploading your room photo...");
+  const label = kind === "reference" ? "reference image" : "room photo";
+  setMessage(`Uploading your ${label}...`);
   const prepareResponse = await fetch("/api/uploads/room-image", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ contentType, size: typedFile.size }),
+    body: JSON.stringify({ contentType, size: typedFile.size, kind }),
     signal,
   });
-  const prepared = await readApiResponse<UploadResponse>(prepareResponse, "The room photo upload could not be prepared.");
+  const prepared = await readApiResponse<UploadResponse>(prepareResponse, `The ${label} upload could not be prepared.`);
   const uploadBody = new FormData();
   uploadBody.append("cacheControl", "3600");
   uploadBody.append("", typedFile, typedFile.name);
@@ -375,19 +453,19 @@ async function uploadRoomImage(file: File, signal: AbortSignal, setMessage: (mes
   });
   if (!uploaded.ok) {
     await uploaded.text().catch(() => "");
-    if (uploaded.status === 413) throw new Error("That image is over 10MB. Please choose a smaller file.");
-    throw new Error("The room photo could not be uploaded. Check your connection and try again.");
+    if (uploaded.status === 413) throw new Error(kind === "reference" ? "Reference image must be 10MB or smaller." : "That image is over 10MB. Please choose a smaller file.");
+    throw new Error(kind === "reference" ? "We couldn't upload the reference image. Please try again." : "The room photo could not be uploaded. Check your connection and try again.");
   }
 
-  setMessage("Checking your room photo...");
+  setMessage(`Checking your ${label}...`);
   const completeResponse = await fetch("/api/uploads/room-image", {
     method: "PATCH",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ path: prepared.path }),
+    body: JSON.stringify({ path: prepared.path, kind }),
     signal,
   });
-  const completed = await readApiResponse<UploadResponse>(completeResponse, "The room photo upload could not be completed.");
-  if (!completed.imageUrl) throw new Error("The room photo upload could not be completed.");
+  const completed = await readApiResponse<UploadResponse>(completeResponse, `The ${label} upload could not be completed.`);
+  if (!completed.imageUrl) throw new Error(`The ${label} upload could not be completed.`);
   return completed.imageUrl;
 }
 

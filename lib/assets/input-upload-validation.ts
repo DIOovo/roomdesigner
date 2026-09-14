@@ -68,3 +68,9 @@ export function isOwnedPendingInputPath(path: string, ownerId: string) {
   if (!path.startsWith(prefix)) return false;
   return /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.(?:jpg|png)$/i.test(path.slice(prefix.length));
 }
+
+export function isOwnedReferencePendingInputPath(path: string, ownerId: string) {
+  const prefix = `${ownerId}/reference-pending/`;
+  if (!path.startsWith(prefix)) return false;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.(?:jpg|png)$/i.test(path.slice(prefix.length));
+}

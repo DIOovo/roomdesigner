@@ -64,7 +64,15 @@ async function advanceJob(job: GenerationJob): Promise<void> {
     if (!await claimStage(job.id, "queued", "generating_after_frame")) return;
     const firstFrame = await resolveInputFrame(admin, job.first_frame_path, job.first_frame_url);
     if (!firstFrame) throw new Error("missing first frame");
-    const after = await generateAfterFrame({ firstFrame, roomType: job.room_type, style: job.style, prompt: buildRoomRedesignPrompt(job.room_type, job.style, normalizeStoredDesignScope(job.design_scope)) });
+    const referenceImage = job.reference_frame_path ? await resolveInputFrame(admin, job.reference_frame_path, null) : null;
+    if (job.reference_frame_path && !referenceImage) throw new Error("missing reference frame");
+    const after = await generateAfterFrame({
+      firstFrame,
+      ...(referenceImage ? { referenceImage } : {}),
+      roomType: job.room_type,
+      style: job.style,
+      prompt: buildRoomRedesignPrompt(job.room_type, job.style, normalizeStoredDesignScope(job.design_scope), { hasReferenceImage: Boolean(referenceImage) }),
+    });
     const persisted = await persistGeneratedAsset({ admin, sourceUrl: after.imageUrl, jobId: job.id, kind: "after-frame" });
     await updateJob(job.id, { last_frame_url: persisted.path ? null : persisted.url, last_frame_path: persisted.path, stage: "submitting_video" });
     return;

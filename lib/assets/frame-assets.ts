@@ -3,6 +3,7 @@ import type { getSupabaseAdmin } from "@/lib/supabase/admin";
 import {
   detectRoomImageContentType,
   isOwnedPendingInputPath,
+  isOwnedReferencePendingInputPath,
   isSupportedRoomImageContentType,
   needsMagicByteValidation,
   normalizeContentType,
@@ -13,21 +14,26 @@ import { downloadRemoteAsset } from "./remote-download";
 import { finalizeSanitizedRoomImage } from "./sanitize-room-image";
 
 type AdminClient = NonNullable<ReturnType<typeof getSupabaseAdmin>>;
+export type InputImageKind = "room" | "reference";
 
 export async function createInputUpload(input: {
   admin: AdminClient;
   contentType: "image/jpeg" | "image/png";
   ownerId: string;
+  kind?: InputImageKind;
 }) {
   const extension = input.contentType === "image/png" ? "png" : "jpg";
-  const path = `${input.ownerId}/pending/${crypto.randomUUID()}.${extension}`;
+  const path = `${input.ownerId}/${input.kind === "reference" ? "reference-pending" : "pending"}/${crypto.randomUUID()}.${extension}`;
   const signed = await input.admin.storage.from("generation-inputs").createSignedUploadUrl(path, { upsert: false });
   if (signed.error) throw new Error("The room photo upload could not be prepared.");
   return { path, signedUrl: signed.data.signedUrl };
 }
 
-export async function signUploadedInput(input: { admin: AdminClient; path: string; ownerId: string }) {
-  if (!isOwnedPendingInputPath(input.path, input.ownerId)) throw new Error("The uploaded room photo is not valid for this session.");
+export async function signUploadedInput(input: { admin: AdminClient; path: string; ownerId: string; kind?: InputImageKind }) {
+  const kind = input.kind ?? "room";
+  if (!isOwnedInputPath(input.path, input.ownerId, kind)) {
+    throw new Error(kind === "reference" ? "The uploaded reference image is not valid for this session." : "The uploaded room photo is not valid for this session.");
+  }
   const storage = input.admin.storage.from("generation-inputs");
   return finalizeSanitizedRoomImage({
     storage,
@@ -53,6 +59,18 @@ export async function resolveSubmittedInputFrame(input: {
   return { url: input.imageUrl, path };
 }
 
+export async function resolveSubmittedReferenceFrame(input: {
+  admin: AdminClient;
+  imageUrl: string;
+  ownerId: string;
+}) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const path = supabaseUrl ? storagePathFromSignedImageUrl(input.imageUrl, supabaseUrl) : null;
+  if (!path || !isOwnedInputPath(path, input.ownerId, "reference")) throw new Error("Please upload the reference image again.");
+  await assertStoredInput(input.admin, path);
+  return { url: input.imageUrl, path };
+}
+
 export async function ensureFrameAccessibleToFal(url: string) {
   if ((process.env.VIDEO_PROVIDER ?? "mock") !== "fal-h3-max") return url;
   const parsed = new URL(url);
@@ -70,6 +88,9 @@ export async function resolveInputFrame(admin: AdminClient | null, path: string 
 
 function absoluteUrl(path: string) { return `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}${path}`; }
 function isLocalHost(hostname: string) { return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1"; }
+function isOwnedInputPath(path: string, ownerId: string, kind: InputImageKind) {
+  return kind === "reference" ? isOwnedReferencePendingInputPath(path, ownerId) : isOwnedPendingInputPath(path, ownerId);
+}
 
 async function assertStoredInput(admin: AdminClient, path: string) {
   const info = await admin.storage.from("generation-inputs").info(path);

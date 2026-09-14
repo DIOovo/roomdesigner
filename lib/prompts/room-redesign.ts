@@ -311,6 +311,13 @@ const REIMAGINE_ALLOWED_BLOCK = [
   "You may redesign built-ins, create stronger feature-wall changes, introduce new cabinetry concepts, apply larger decorative treatments, restyle window treatments, and propose more substantial interior architecture concepts.",
 ];
 
+const REFERENCE_STYLE_BLOCK = [
+  "Two input images are provided: image 1 is the user's room and is the only source of room identity, geometry, architecture, viewpoint, composition, and spatial layout; image 2 is a style reference only.",
+  "Copy from image 2 only its color palette, materials and finishes, furniture design language, decor style, lighting mood, and overall visual atmosphere.",
+  "Never copy image 2's room geometry, floor plan, walls, openings, camera angle, composition, object positions, or room identity into image 1.",
+  "Where image 2's visual style differs from the selected style preset, use image 2 as the primary style authority while keeping the preset as supporting guidance.",
+];
+
 const KEEP_NEGATIVE_BLOCK = [
   "Do not change the room type, enlarge or extend the room, invent openings, or remove structural features.",
   "Do not replace ordinary windows with floor-to-ceiling windows.",
@@ -339,7 +346,7 @@ const REIMAGINE_FINAL_BLOCK = [
 
 const DEFAULT_RULE = ROOM_TYPE_RULES["living room"]!;
 
-export function buildRoomRedesignPrompt(roomType: string, style: string, designScope: DesignScope = "keep-layout") {
+export function buildRoomRedesignPrompt(roomType: string, style: string, designScope: DesignScope = "keep-layout", options?: { hasReferenceImage?: boolean }) {
   const rule = ROOM_TYPE_RULES[roomType.trim().toLowerCase()] ?? DEFAULT_RULE;
   const styleKey = style.trim();
   const styledLabel = styleKey || "refined";
@@ -357,6 +364,7 @@ export function buildRoomRedesignPrompt(roomType: string, style: string, designS
     ...(isReimagine ? [] : KEEP_ARCHITECTURE_BLOCK),
     ...(isReimagine ? [] : KEEP_BOLD_REDESIGN_BLOCK),
     ...(isReimagine ? REIMAGINE_ALLOWED_BLOCK : KEEP_ALLOWED_BLOCK),
+    ...(options?.hasReferenceImage ? REFERENCE_STYLE_BLOCK : []),
     `Apply the selected "${styledLabel}" interior style while respecting every constraint above.`,
     styleGuidance,
     ...(isReimagine ? [] : STYLE_STRENGTH_BLOCK),

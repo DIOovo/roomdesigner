@@ -23,6 +23,7 @@ export type GenerationJob = {
   priority_queue: boolean;
   first_frame_url: string | null;
   first_frame_path: string | null;
+  reference_frame_path: string | null;
   last_frame_url: string | null;
   last_frame_path: string | null;
   raw_video_url: string | null;

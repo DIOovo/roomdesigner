@@ -29,7 +29,7 @@ test("After Image prompt receives the persisted job design scope", () => {
   assert.match(reimagine, /Design scope: reimagine the space/i);
 
   const pipeline = source("app/api/generations/[id]/route.ts");
-  assert.match(pipeline, /buildRoomRedesignPrompt\(job\.room_type, job\.style, normalizeStoredDesignScope\(job\.design_scope\)\)/);
+  assert.match(pipeline, /buildRoomRedesignPrompt\(job\.room_type, job\.style, normalizeStoredDesignScope\(job\.design_scope\),/);
   assert.doesNotMatch(pipeline, /designScope.*searchParams|designScope.*formData/);
 });
 
@@ -38,7 +38,7 @@ test("production After Image wiring preserves the complete viewpoint prompt for 
   const gateway = source("lib/image/gateway.ts");
   const remote = source("lib/image/providers/remote.ts");
 
-  assert.match(pipeline, /generateAfterFrame\(\{ firstFrame, roomType: job\.room_type, style: job\.style, prompt: buildRoomRedesignPrompt/);
+  assert.match(pipeline, /generateAfterFrame\(\{[\s\S]*firstFrame,[\s\S]*roomType: job\.room_type,[\s\S]*style: job\.style,[\s\S]*prompt: buildRoomRedesignPrompt/);
   assert.match(gateway, /return factory\(\)\.generate\(input\)/);
   assert.match(remote, /body: JSON\.stringify\(input\)/);
   assert.doesNotMatch(remote, /prompt\.(?:slice|substring)|prompt\s*=\s*input\.style/);
@@ -97,7 +97,7 @@ test("owned history reuse returns and restores design scope without generation o
   assert.match(reuse, /designScope: normalizeStoredDesignScope\(job\.design_scope\)/);
   assert.doesNotMatch(reuse, /reserveGenerationCredit|generateAfterFrame|getVideoGateway/);
   assert.match(generator, /setDesignScope\(data\.designScope\)/);
-  assert.match(generator, /JSON\.stringify\(\{ imageUrl, roomType: room, style, scope: designScope \}\)/);
+  assert.match(generator, /JSON\.stringify\(\{ imageUrl, .*roomType: room, style, scope: designScope \}\)/);
   assert.match(generator, /onClick=\{handlePrimaryAction\}/);
 });
 

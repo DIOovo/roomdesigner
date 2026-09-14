@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { FalKontextAfterFrameProvider, falKontextModel } from "../lib/image/providers/fal-kontext.ts";
+import { FalKontextAfterFrameProvider, falKontextModel, falKontextMultiModel } from "../lib/image/providers/fal-kontext.ts";
 import { MockAfterFrameProvider } from "../lib/image/providers/mock.ts";
 
 const testInput = {
@@ -50,10 +50,21 @@ test("fal-kontext defaults to fal-ai/flux-pro/kontext/max", () => {
   });
 });
 
+test("fal-kontext uses the official multi-image endpoint only for reference-guided edits", () => {
+  withEnv({ FAL_KEY: "test-only-key", AFTER_IMAGE_MULTI_MODEL: undefined }, () => {
+    assert.equal(falKontextMultiModel(), "fal-ai/flux-pro/kontext/max/multi");
+    const input = provider().mapInput({ ...testInput, referenceImage: "https://assets.example.test/reference.jpg" });
+    assert.deepEqual(input.image_urls, [testInput.firstFrame, "https://assets.example.test/reference.jpg"]);
+    assert.equal("image_url" in input, false);
+    assert.equal(input.prompt, testInput.prompt);
+  });
+});
+
 test("fal-kontext maps the before image and the complete existing prompt", () => {
   withEnv({ FAL_KEY: "test-only-key", AFTER_IMAGE_MODEL: undefined }, () => {
     const input = provider().mapInput(testInput);
     assert.equal(input.image_url, "https://assets.example.test/before.jpg");
+    assert.equal("image_urls" in input, false);
     assert.equal(input.prompt, "Preserve the exact camera viewpoint and redesign the same room.");
   });
 });
