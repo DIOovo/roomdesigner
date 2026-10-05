@@ -66,6 +66,20 @@ export function Analytics() {
           <Script id="ga4" strategy="afterInteractive">{`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config',${JSON.stringify(ga)},{anonymize_ip:true,page_location:window.location.origin+window.location.pathname});`}</Script>
         </>
       ) : null}
+      {consent === "accepted" && isProd ? (
+        <>
+          <Script src="https://analytics.blurb.cam/js/pa-X-cpMOi0xcIwaBs6i3yFO.js" strategy="afterInteractive" />
+          <Script id="plausible-init" strategy="afterInteractive">{`
+            window.plausible = window.plausible || function() {
+              (plausible.q = plausible.q || []).push(arguments)
+            };
+            plausible.init = plausible.init || function(i) {
+              plausible.o = i || {}
+            };
+            plausible.init();
+          `}</Script>
+        </>
+      ) : null}
       {consent === "accepted" && pixel ? (
         <Script id="meta-pixel" strategy="afterInteractive">{`!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init',${JSON.stringify(pixel)});fbq('track','PageView');`}</Script>
       ) : null}
