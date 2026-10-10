@@ -28,10 +28,13 @@ export default async function BlogPost({ params }: { params: Promise<{ slug: str
         <div className="mt-12 grid gap-12">
           {post.sections.map((section) => <section key={section.title}><h2 className="text-3xl font-black tracking-[-0.04em]">{section.title}</h2><p className="mt-4 text-lg leading-8 text-[var(--muted)]">{section.body}</p></section>)}
         </div>
+        <p className="mt-12 text-lg leading-8 text-[var(--muted)]">
+          Ready to explore a direction for your space? You can <Link href="/#generator" className="font-bold text-[var(--accent)] underline">create your own AI room design video</Link>, or <Link href="/pricing" className="font-bold text-[var(--accent)] underline">see plans and pricing</Link> before you begin.
+        </p>
         <aside className="mt-14 border-t border-[var(--line)] pt-8">
           <h2 className="text-2xl font-black tracking-[-0.03em]">Related articles</h2>
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            {posts.filter((related) => related.slug !== post.slug).map((related) => <Link key={related.slug} href={`/blog/${related.slug}`} className="focus-ring rounded-xl border border-[var(--line)] p-4 font-bold hover:border-[var(--accent)]">{related.title}</Link>)}
+            {posts.filter((related) => related.slug !== post.slug).map((related) => <Link key={related.slug} href={`/blog/${related.slug}`} className="focus-ring rounded-xl border border-[var(--line)] p-4 font-bold hover:border-[var(--accent)]">{related.linkLabel}</Link>)}
           </div>
         </aside>
         <aside className="surface mt-14 p-6 md:p-8"><h2 className="text-3xl font-black tracking-[-0.04em]">See your own room in motion.</h2><p className="mt-3 leading-7 text-[var(--muted)]">Try RoomFacelift with a photo or sample room. Your first preview works without login.</p><Link href="/#generator" className="focus-ring mt-6 inline-flex items-center gap-2 rounded-xl bg-[var(--accent)] px-5 py-3 font-black text-[var(--on-accent)]">Try RoomFacelift <ArrowRight size={18} weight="bold" /></Link></aside>

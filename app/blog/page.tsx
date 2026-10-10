@@ -15,7 +15,7 @@ export default function BlogPage() {
         {posts.map((post, index) => (
           <article key={post.slug} className={`surface p-7 ${index === 0 ? "md:col-span-2 md:grid md:grid-cols-[1.3fr_.7fr] md:gap-10" : ""}`}>
             <div><p className="text-sm font-bold text-[var(--accent)]">{post.keyword}</p><h2 className="mt-3 text-3xl font-black tracking-[-0.04em]">{post.title}</h2><p className="mt-4 leading-7 text-[var(--muted)]">{post.description}</p></div>
-            <div className="mt-7 flex items-end md:mt-0 md:justify-end"><Link href={`/blog/${post.slug}`} className="focus-ring flex items-center gap-2 rounded-lg bg-[var(--accent)] px-4 py-3 text-sm font-black text-[var(--on-accent)] hover:bg-[var(--accent-strong)]">Read guide <ArrowRight size={17} weight="bold" /></Link></div>
+            <div className="mt-7 flex items-end md:mt-0 md:justify-end"><Link href={`/blog/${post.slug}`} className="focus-ring flex items-center gap-2 rounded-lg bg-[var(--accent)] px-4 py-3 text-sm font-black text-[var(--on-accent)] hover:bg-[var(--accent-strong)]">{post.linkLabel} <ArrowRight size={17} weight="bold" /></Link></div>
           </article>
         ))}
       </div>
