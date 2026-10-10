@@ -91,7 +91,7 @@ test("analytics is a consent-gated no-op and strips sensitive properties", () =>
   assert.equal(hasAnalyticsConsent(undefined), false);
   assert.equal(hasAnalyticsConsent({ getItem: () => "essential" }), false);
   assert.equal(hasAnalyticsConsent({ getItem: () => "accepted" }), true);
-  assert.deepEqual(sanitizeAnalyticsProperties({ roomType: "Kitchen", style: "Japandi", email: "private@example.com", videoUrl: "https://private" }), { roomType: "Kitchen", style: "Japandi" });
+  assert.deepEqual(sanitizeAnalyticsProperties({ room_type: "Kitchen", style: "Japandi", email: "private@example.com", videoUrl: "https://private" }), { room_type: "Kitchen", style: "Japandi" });
 });
 
 test("public review copy names Creem and does not advertise planned Pro features", async () => {

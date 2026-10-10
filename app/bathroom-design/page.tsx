@@ -1,7 +1,8 @@
 import Link from "next/link";
-import Image from "next/image";
 import { RoomGenerator } from "@/components/generator/room-generator";
+import { StyleSelectionProvider } from "@/components/generator/style-selection";
 import { BathroomRemodelCases } from "@/components/bathroom/remodel-cases";
+import { BathroomStyleShowcase } from "@/components/bathroom/style-showcase";
 import { publicPageMetadata } from "@/lib/seo";
 import { siteConfig, styles } from "@/lib/site";
 
@@ -23,6 +24,13 @@ const bathroomStyleGuide = [
   { name: "Coastal", details: "soft blues, light wood, airy and bright" },
   { name: "Industrial", details: "matte black fixtures, concrete, exposed metal" },
 ] as const;
+
+// The eight official bathroom styles, paired with their preview photography.
+// Phase A: this feeds the interactive style showcase only — generator state is untouched.
+const bathroomStyleItems = bathroomStyleGuide.flatMap((item) => {
+  const styleAsset = styles.find((s) => s.name === item.name);
+  return styleAsset ? [{ name: item.name, details: item.details, image: styleAsset.image, alt: styleAsset.alt }] : [];
+});
 
 const bathroomFaqs = [
   {
@@ -95,6 +103,8 @@ export default function BathroomDesignPage() {
   ];
 
   return (
+    // One style selection shared by the generator and the style showcase below.
+    <StyleSelectionProvider initialStyle="Japandi">
     <main>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
 
@@ -104,7 +114,7 @@ export default function BathroomDesignPage() {
           <h1 className="text-[clamp(2.6rem,5vw,5.25rem)] leading-[.98]">Bathroom Design: See Your Bathroom Before &amp; After</h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-[var(--muted)]">Upload a photo of your bathroom. Watch it become a whole new space — in video, not a static render.</p>
         </div>
-        <RoomGenerator initialRoomType="Bathroom" lockRoomType />
+        <RoomGenerator initialRoomType="Bathroom" lockRoomType surface="bathroom_design" />
         <p className="mt-4 text-sm font-semibold text-[var(--muted)]">{freePreviewLine}</p>
       </section>
 
@@ -126,26 +136,8 @@ export default function BathroomDesignPage() {
           <h2 id="bathroom-styles-title" className="text-4xl md:text-6xl">Bathroom Design Ideas by Style</h2>
           <p className="mt-5 max-w-2xl text-lg leading-8 text-[var(--muted)]">Not sure which direction to take? These are the styles that work best in bathrooms, and you can preview any of them on your own photo in a single click:</p>
         </div>
-        <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {bathroomStyleGuide.map((item, index) => {
-            const styleAsset = styles.find((s) => s.name === item.name);
-            return (
-              <article key={item.name} className="surface overflow-hidden">
-                {styleAsset ? (
-                  <div className="relative aspect-[16/10] overflow-hidden">
-                    <Image src={styleAsset.image} alt={styleAsset.alt} fill className="object-cover" sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 280px" />
-                  </div>
-                ) : null}
-                <div className="p-5">
-                  <div className="flex items-center justify-between gap-4">
-                    <h3 className="text-xl">{item.name}</h3>
-                    <span className="text-xs font-black text-[var(--muted)]">0{index + 1}</span>
-                  </div>
-                  <p className="mt-3 leading-7 text-[var(--muted)]">{item.details}</p>
-                </div>
-              </article>
-            );
-          })}
+        <div className="mt-12">
+          <BathroomStyleShowcase items={bathroomStyleItems} />
         </div>
       </section>
 
@@ -212,5 +204,6 @@ export default function BathroomDesignPage() {
         </div>
       </section>
     </main>
+    </StyleSelectionProvider>
   );
 }

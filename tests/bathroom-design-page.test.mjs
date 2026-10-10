@@ -23,7 +23,7 @@ test("bathroom design page has exact metadata, one H1, and a Bathroom-default ge
   assert.match(page, /Upload a photo of your bathroom and watch AI redesign it in a smooth before & after video\. Free preview, no login for the first one\./);
   assert.equal((page.match(/<h1\b/g) ?? []).length, 1);
   assert.match(page, /Bathroom Design: See Your Bathroom Before &amp; After/);
-  assert.match(page, /<RoomGenerator initialRoomType="Bathroom" lockRoomType \/>/);
+  assert.match(page, /<RoomGenerator initialRoomType="Bathroom" lockRoomType surface="bathroom_design" \/>/);
   assert.match(page, /First preview free, no login\. 480p with watermark\./);
   assert.match(generator, /initialRoomType = "Living Room"/);
 });

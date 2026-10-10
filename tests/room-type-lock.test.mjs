@@ -42,9 +42,19 @@ function harness(props = {}) {
       styles: [{ name: "Japandi" }, { name: "Modern" }],
     },
     "@/lib/analytics/events": { track() {}, trackEvent() {}, toAnalyticsValue: (v) => v },
+    "@/lib/analytics/generator-events": {
+      trackGenerateClick() {},
+      trackGenerationStarted() {},
+      trackGenerationCompleted() {},
+      trackGenerationFailed() {},
+      trackRoomTypeSelected() {},
+      trackStyleSelected() {},
+    },
     "@/lib/generation/design-scope": { isDesignScope: (v) => ["keep-layout", "reimagine-space"].includes(v) },
     "@/lib/http/client-response": { ApiResponseError: class extends Error {}, readApiResponse: async (r) => r },
     "@/lib/assets/input-upload-validation": { resolveRoomImageContentType: () => "image/jpeg" },
+    // No provider in the harness: the generator exercises its local-state fallback.
+    "@/components/generator/style-selection": { useOptionalStyleSelection: () => null },
   };
   const exports = {};
   runInNewContext(compiled, {
@@ -123,7 +133,7 @@ test("history restores other settings but cannot override locked Bathroom; unloc
 test("only the bathroom caller opts into the room lock", () => {
   const page = readFileSync(new URL("../app/bathroom-design/page.tsx", import.meta.url), "utf8");
   const home = readFileSync(new URL("../app/page.tsx", import.meta.url), "utf8");
-  assert.match(page, /<RoomGenerator initialRoomType="Bathroom" lockRoomType \/>/);
+  assert.match(page, /<RoomGenerator initialRoomType="Bathroom" lockRoomType surface="bathroom_design" \/>/);
   assert.match(home, /<RoomGenerator \/>/);
   assert.doesNotMatch(home, /lockRoomType/);
 });

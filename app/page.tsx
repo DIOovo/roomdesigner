@@ -23,6 +23,17 @@ const plans: readonly Plan[] = [
   { name: "Credit Pack", price: "$19.99", note: "one-time", features: ["30 video credits", "5-second HD video", "Valid for one year", "No subscription"] },
 ];
 
+const quickFacts = [
+  { label: "What it does", value: "Redesigns a room from one uploaded photo." },
+  { label: "What it generates", value: "A redesigned image and a before-and-after transformation video." },
+  { label: "Video length", value: "5 seconds." },
+  { label: "Free option", value: "Yes. The first 5-second preview is free and does not reset daily." },
+  { label: "Account required", value: "No login is required for the first preview. Sign-in is required for the second generation." },
+  { label: "Layout preservation", value: "Yes. Choose Keep layout to preserve windows, doors, walls, and major fixed elements. Reimagine space allows larger design changes for concept exploration." },
+  { label: "Supported rooms", value: "Living rooms, bedrooms, kitchens, bathrooms, dining rooms, offices, basements, attics, and studies." },
+  { label: "Available styles", value: "Fifteen styles including Modern, Scandinavian, Japandi, Mid-century Modern, Industrial, Bohemian, Luxury, French Country, Minimalist, Art Deco, Coastal, Farmhouse, Mediterranean, Contemporary, and Traditional." },
+] as const;
+
 export default function HomePage() {
   return (
     <main>
@@ -64,6 +75,27 @@ export default function HomePage() {
               <div className="surface p-3"><ComparisonSlider before="/samples/office-before.jpg" after="/samples/office-after.jpg" label="Mid-century office" /><h3 className="px-1 pb-1 pt-3 font-black">Mid-century office</h3></div>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="shell py-20 md:py-28">
+        <div className="grid gap-8 lg:grid-cols-[.9fr_1.1fr]">
+          <h2 className="text-4xl md:text-6xl">What is RoomFacelift?</h2>
+          <p className="text-[17px] leading-8 text-[var(--muted)]">RoomFacelift is an AI room design tool that turns a single room photo into a redesigned interior and a before-and-after transformation video. Upload a photo, choose your room type and interior style, then use Keep layout when you want to preserve the original room structure or Reimagine space when you want to explore a more creative redesign.</p>
+        </div>
+      </section>
+
+      <section className="border-y border-[var(--line)] bg-[color:var(--surface)]/35 py-20 md:py-28">
+        <div className="shell">
+          <h2 className="text-4xl md:text-6xl">RoomFacelift Quick Facts</h2>
+          <dl className="mt-12 grid gap-x-12 gap-y-8 sm:grid-cols-2">
+            {quickFacts.map((fact) => (
+              <div key={fact.label} className="border-b border-[var(--line)] pb-6">
+                <dt className="text-sm font-bold uppercase tracking-[.12em] text-[var(--muted)]">{fact.label}</dt>
+                <dd className="mt-2 leading-7 text-[var(--ink)]">{fact.value}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
       </section>
 
