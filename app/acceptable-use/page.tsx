@@ -12,7 +12,7 @@ export const metadata = publicPageMetadata({
 export default function AcceptableUsePage() {
   const legalLinkClass = "font-bold text-[var(--accent)] underline";
   return (
-    <LegalPage title="Acceptable Use Policy" intro="This policy describes the rules for using RoomFacelift's AI-powered room redesign and generation services. Last updated September 7, 2026.">
+    <LegalPage title="Acceptable Use Policy" intro="This policy describes the rules for using RoomFacelift's AI-powered room redesign and generation services. Last updated October 10, 2026.">
       <section>
         <h2>Introduction</h2>
         <p>RoomFacelift may be used only for lawful, good-faith room visualization and design purposes. When you use the generation service, you agree to follow this policy together with our <Link className={legalLinkClass} href="/terms">Terms of Service</Link> and <Link className={legalLinkClass} href="/privacy">Privacy Policy</Link>.</p>
@@ -48,6 +48,21 @@ export default function AcceptableUsePage() {
       <section>
         <h2>Circumvention and Automated Abuse</h2>
         <p>You may not bypass usage limits, credit restrictions, security controls, or abuse-prevention measures; exploit free credits; farm accounts; operate abusive bots; scrape private or access-controlled parts of the service without authorization; or interfere with service operation. This restriction does not prohibit ordinary search-engine indexing of publicly accessible pages in accordance with our published crawling rules.</p>
+      </section>
+
+      <section>
+        <h2>Content Moderation and Reports</h2>
+        <p>Users can report suspected violations to <a className={legalLinkClass} href={`mailto:${siteConfig.supportEmail}`}>{siteConfig.supportEmail}</a>. When a report is received, RoomFacelift reviews the available information. Reports are acknowledged within 3 business days and, where reasonably possible, review is completed within 7 business days.</p>
+        <p className="mt-3">Serious safety concerns, suspected illegal activity, child-safety issues, or immediate-harm concerns may be prioritized. Depending on the circumstances, possible actions may include:</p>
+        <ul className="mt-3 grid list-disc gap-2 pl-6">
+          <li>Rejecting or blocking a generation request.</li>
+          <li>Removing or restricting access to content.</li>
+          <li>Warning the user.</li>
+          <li>Temporarily restricting service access.</li>
+          <li>Suspending or terminating an account.</li>
+          <li>Preserving relevant records where required for security, fraud prevention, dispute handling, or legal compliance.</li>
+        </ul>
+        <p className="mt-3">Repeated or severe violations may result in permanent termination. Users may request review of an enforcement decision by contacting <a className={legalLinkClass} href={`mailto:${siteConfig.supportEmail}`}>{siteConfig.supportEmail}</a>.</p>
       </section>
 
       <section>
