@@ -117,7 +117,7 @@ export default function HomePage() {
           ))}
         </div>
         <p className="mt-7 text-center text-sm font-semibold text-[var(--muted)]">Upgrade to remove watermark + unlock HD + commercial license</p>
-        <p className="mt-4 text-center text-sm text-[var(--muted)]">Need practical tips first? Read our <Link href="/blog" className="font-bold text-[var(--accent)] underline">AI room design guides</Link>.</p>
+        <p className="mt-4 text-center text-sm leading-6 text-[var(--muted)]">Need practical tips first? Read our <Link href="/blog" className="font-bold text-[var(--accent)] underline">AI room design guides</Link>, including <Link href="/blog/ai-room-design" className="font-bold text-[var(--accent)] underline">AI room design: a practical guide</Link>, <Link href="/blog/ai-room-design-from-photo" className="font-bold text-[var(--accent)] underline">how to create an AI room design from a photo</Link>, and <Link href="/blog/interior-design-ai-video" className="font-bold text-[var(--accent)] underline">interior design AI video for client presentations</Link>. You can also <Link href="/pricing" className="font-bold text-[var(--accent)] underline">see all plans and pricing</Link>.</p>
       </section>
 
       <section className="border-y border-[var(--line)] bg-[color:var(--surface)]/35 py-20 md:py-28">

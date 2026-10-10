@@ -1,6 +1,7 @@
 export const posts = [
   {
     slug: "ai-room-design",
+    linkLabel: "AI room design: a practical guide",
     title: "AI Room Design: A Practical Guide for Better Results",
     description: "Learn how AI room design works, which photos produce the best results, and how to turn concepts into clear renovation decisions.",
     keyword: "ai room design",
@@ -17,6 +18,7 @@ export const posts = [
   },
   {
     slug: "ai-room-design-from-photo",
+    linkLabel: "how to create an AI room design from a photo",
     title: "How to Create AI Room Design From a Photo",
     description: "A step-by-step guide to creating an AI room design from a photo, choosing a style, and reviewing the final transformation video.",
     keyword: "ai room design from photo",
@@ -33,6 +35,7 @@ export const posts = [
   },
   {
     slug: "interior-design-ai-video",
+    linkLabel: "interior design AI video for client presentations",
     title: "Interior Design AI Video for Client Presentations",
     description: "See how interior designers, remodelers, and real estate teams can use AI transformation video in proposals and property marketing.",
     keyword: "interior design AI video",

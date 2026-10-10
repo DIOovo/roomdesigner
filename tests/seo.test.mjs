@@ -147,6 +147,40 @@ test("the standalone pricing CTA links to the existing homepage generator", asyn
   assert.doesNotMatch(pricing, /href="\/#pricing"/);
 });
 
+test("public pages expose descriptive, crawlable internal links", async () => {
+  const [header, footer, homepage, blog, article, blogData] = await Promise.all([
+    "components/site-header.tsx",
+    "components/site-footer.tsx",
+    "app/page.tsx",
+    "app/blog/page.tsx",
+    "app/blog/[slug]/page.tsx",
+    "lib/blog.ts",
+  ].map(read));
+
+  assert.match(header, /href="\/#pricing"/);
+  for (const route of ["/pricing", "/blog"]) assert.match(footer, new RegExp(`href="${route}"`));
+  for (const route of ["/blog", "/pricing", "/blog/ai-room-design", "/blog/ai-room-design-from-photo", "/blog/interior-design-ai-video"]) {
+    assert.match(homepage, new RegExp(`href="${route}"`));
+  }
+  assert.match(blog, /href="\/#generator"/);
+  assert.match(blog, /href=\{`\/blog\/\$\{post\.slug\}`\}/);
+  assert.match(blog, /\{post\.linkLabel\}/);
+  assert.doesNotMatch(blog, />Read guide\s*</);
+
+  const expectedArticleLinks = [
+    ["ai-room-design", "AI room design: a practical guide"],
+    ["ai-room-design-from-photo", "how to create an AI room design from a photo"],
+    ["interior-design-ai-video", "interior design AI video for client presentations"],
+  ];
+  for (const [slug, label] of expectedArticleLinks) {
+    assert.match(blogData, new RegExp(`slug: "${slug}"[\\s\\S]*?linkLabel: "${label}"`));
+  }
+  assert.match(article, /href="\/#generator"/);
+  assert.match(article, /href="\/pricing"/);
+  assert.match(article, /related\.slug !== post\.slug/);
+  assert.match(article, /\{related\.linkLabel\}/);
+});
+
 test("acceptable use policy covers AI safety, reporting, review, and enforcement without fake moderation claims", async () => {
   const [acceptableUse, terms, footer, sitemap, site] = await Promise.all([
     "app/acceptable-use/page.tsx",

@@ -17,6 +17,8 @@ export function SiteFooter() {
         <nav aria-label="Footer navigation" className="flex max-w-2xl flex-wrap gap-x-6 gap-y-3 text-sm font-semibold text-[var(--muted)] md:justify-end">
           <Link href="/about">About</Link>
           <Link href="/contact">Contact</Link>
+          <Link href="/pricing">Pricing</Link>
+          <Link href="/blog">Guides</Link>
           <Link href="/privacy">Privacy Policy</Link>
           <Link href="/terms">Terms of Service</Link>
           <Link href="/refund">Refund Policy</Link>
