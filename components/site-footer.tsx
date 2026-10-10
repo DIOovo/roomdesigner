@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { siteConfig } from "@/lib/site";
 
 export function SiteFooter() {
   return (
@@ -9,6 +10,9 @@ export function SiteFooter() {
           <p className="mt-3 max-w-md text-sm leading-6 text-[var(--muted)]">
             Turn one room photo into a smooth AI before and after design video.
           </p>
+          <a className="mt-3 inline-flex text-sm font-semibold text-[var(--accent)] underline decoration-[color:var(--accent)]/35 underline-offset-4" href={`mailto:${siteConfig.supportEmail}`}>
+            {siteConfig.supportEmail}
+          </a>
         </div>
         <nav aria-label="Footer navigation" className="flex max-w-2xl flex-wrap gap-x-6 gap-y-3 text-sm font-semibold text-[var(--muted)] md:justify-end">
           <Link href="/about">About</Link>

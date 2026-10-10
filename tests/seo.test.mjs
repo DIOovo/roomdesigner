@@ -61,17 +61,23 @@ test("private pages are noindex and public metadata uses the production origin",
 });
 
 test("production legal pages contain support, refund, privacy, and navigation disclosures", async () => {
-  const [contact, privacy, terms, refund, footer, site] = await Promise.all([
+  const [contact, privacy, terms, refund, acceptableUse, footer, site] = await Promise.all([
     "app/contact/page.tsx",
     "app/privacy/page.tsx",
     "app/terms/page.tsx",
     "app/refund/page.tsx",
+    "app/acceptable-use/page.tsx",
     "components/site-footer.tsx",
     "lib/site.ts",
   ].map(read));
   assert.match(site, /support@roomfacelift\.com/);
   assert.match(contact, /siteConfig\.supportEmail/);
-  assert.doesNotMatch([contact, privacy, terms, refund, footer].join("\n"), /support@roomorphic\.com/i);
+  for (const source of [contact, privacy, refund, acceptableUse, footer]) assert.match(source, /siteConfig\.supportEmail/);
+  const publicLegalContent = [contact, privacy, terms, refund, acceptableUse, footer].join("\n");
+  assert.doesNotMatch(publicLegalContent, /support@roomorphic\.com/i);
+  for (const placeholder of ["[email protected]", "NEEDS CONFIRMATION", "[optional]", "[if applicable]", "[DATE]", "[company name]", "[address]"]) {
+    assert.equal(publicLegalContent.includes(placeholder), false);
+  }
   assert.doesNotMatch(privacy, /must be finalized before launch|\bTODO\b|\bTBD\b/i);
   for (const heading of ["Third-Party Service Providers", "Cookies and Similar Technologies", "Your Privacy Rights", "International Data Transfers", "Children&apos;s Privacy"]) assert.match(privacy, new RegExp(heading));
   for (const provider of ["Supabase", "Cloudflare", "fal.ai", "MiniMax", "Google", "Creem", "Google Analytics", "Google AdSense", "Meta Pixel"]) assert.match(privacy, new RegExp(provider.replace(".", "\\.")));
@@ -85,6 +91,7 @@ test("production legal pages contain support, refund, privacy, and navigation di
   assert.match(refund, /authorized payment provider or Merchant of Record/);
   assert.match(terms, /href="\/refund"/);
   for (const route of ["/privacy", "/terms", "/refund", "/contact"]) assert.match(footer, new RegExp(`href="${route}"`));
+  assert.equal(footer.includes('href={`mailto:${siteConfig.supportEmail}`}'), true);
 });
 
 test("analytics is a consent-gated no-op and strips sensitive properties", () => {
@@ -140,7 +147,7 @@ test("the standalone pricing CTA links to the existing homepage generator", asyn
   assert.doesNotMatch(pricing, /href="\/#pricing"/);
 });
 
-test("acceptable use policy covers AI safety boundaries without fake moderation claims", async () => {
+test("acceptable use policy covers AI safety, reporting, review, and enforcement without fake moderation claims", async () => {
   const [acceptableUse, terms, footer, sitemap, site] = await Promise.all([
     "app/acceptable-use/page.tsx",
     "app/terms/page.tsx",
@@ -150,7 +157,7 @@ test("acceptable use policy covers AI safety boundaries without fake moderation 
   ].map(read));
   assert.match(acceptableUse, /title: "Acceptable Use Policy \| RoomFacelift"/);
   assert.match(acceptableUse, /path: "\/acceptable-use"/);
-  for (const section of ["Introduction", "Permitted Use", "Prohibited Content and Activities", "Image and Content Rights", "AI Safety and Abuse", "Circumvention and Automated Abuse", "Enforcement", "Changes to This Policy", "Contact"]) assert.match(acceptableUse, new RegExp(section));
+  for (const section of ["Introduction", "Permitted Use", "Prohibited Content and Activities", "Image and Content Rights", "AI Safety and Abuse", "Circumvention and Automated Abuse", "Content Moderation and Reports", "Enforcement", "Changes to This Policy", "Contact"]) assert.match(acceptableUse, new RegExp(section));
   assert.match(acceptableUse, /sexually explicit content/);
   assert.match(acceptableUse, /Illegal, exploitative, hateful, abusive/);
   assert.match(acceptableUse, /necessary permission to use/);
@@ -158,6 +165,12 @@ test("acceptable use policy covers AI safety boundaries without fake moderation 
   assert.match(acceptableUse, /href="\/terms"/);
   assert.match(acceptableUse, /href="\/privacy"/);
   assert.match(acceptableUse, /siteConfig\.supportEmail/);
+  assert.match(acceptableUse, /Reports are acknowledged within 3 business days/);
+  assert.match(acceptableUse, /review is completed within 7 business days/);
+  assert.match(acceptableUse, /Rejecting or blocking a generation request/);
+  assert.match(acceptableUse, /Suspending or terminating an account/);
+  assert.match(acceptableUse, /Repeated or severe violations may result in permanent termination/);
+  assert.match(acceptableUse, /request review of an enforcement decision/);
   assert.match(site, /support@roomfacelift\.com/);
   assert.match(terms, /Acceptable use and AI safety/);
   assert.match(terms, /illegal, sexually explicit, harmful, abusive, deceptive/);
