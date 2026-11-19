@@ -37,7 +37,7 @@ export default async function BlogPost({ params }: { params: Promise<{ slug: str
             {posts.filter((related) => related.slug !== post.slug).map((related) => <Link key={related.slug} href={`/blog/${related.slug}`} className="focus-ring rounded-xl border border-[var(--line)] p-4 font-bold hover:border-[var(--accent)]">{related.linkLabel}</Link>)}
           </div>
         </aside>
-        <aside className="surface mt-14 p-6 md:p-8"><h2 className="text-3xl font-black tracking-[-0.04em]">See your own room in motion.</h2><p className="mt-3 leading-7 text-[var(--muted)]">Try RoomFacelift with a photo or sample room. Your first preview works without login.</p><Link href="/#generator" className="focus-ring mt-6 inline-flex items-center gap-2 rounded-xl bg-[var(--accent)] px-5 py-3 font-black text-[var(--on-accent)]">Try RoomFacelift <ArrowRight size={18} weight="bold" /></Link></aside>
+        <aside className="surface mt-14 p-6 md:p-8"><h2 className="text-3xl font-black tracking-[-0.04em]">See your own room in motion.</h2><p className="mt-3 leading-7 text-[var(--muted)]">Use your photo or a sample room. Generation requires an account and purchased credits.</p><Link href="/#generator" className="focus-ring mt-6 inline-flex items-center gap-2 rounded-xl bg-[var(--accent)] px-5 py-3 font-black text-[var(--on-accent)]">Try RoomFacelift <ArrowRight size={18} weight="bold" /></Link></aside>
       </article>
     </main>
   );

@@ -119,7 +119,7 @@ export function RoomGenerator({ surface = "home" }: { surface?: "home" | "bathro
         track("upgrade_required");
       } else {
         setStatus("auth");
-        setMessage("Sign in to use your second free preview.");
+        setMessage("Sign in and purchase credits to generate.");
         track("login_required", { source: "generator" });
       }
       return;
@@ -392,7 +392,7 @@ async function uploadRoomImage(file: File, signal: AbortSignal, setMessage: (mes
 }
 
 function creditLabel(entitlements: UserEntitlements) {
-  if (!entitlements.authenticated) return entitlements.totalCreditsRemaining ? "1 free preview left · no login required" : "Sign in to claim your second preview";
+  if (!entitlements.authenticated) return "Sign in and purchase credits to generate";
   const plan = entitlements.plan === "free" ? "Free" : entitlements.plan[0].toUpperCase() + entitlements.plan.slice(1);
   return `${plan} · ${entitlements.totalCreditsRemaining} generation${entitlements.totalCreditsRemaining === 1 ? "" : "s"} left`;
 }

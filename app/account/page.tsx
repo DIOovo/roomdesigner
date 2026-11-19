@@ -26,7 +26,6 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
   ]);
   const facts = [
     ["Current plan", title(entitlement.plan)],
-    ["Free previews", entitlement.freeCreditsRemaining],
     ["Subscription credits", entitlement.subscriptionCreditsRemaining],
     ["Credit-pack credits", entitlement.creditPackCreditsRemaining],
     ["Total available", entitlement.totalCreditsRemaining],

@@ -60,6 +60,8 @@ async function advanceJob(job: GenerationJob): Promise<void> {
   }
   if (isStuck(job)) throw new Error("stalled generation stage");
 
+  if (job.credit_source === "free") throw new Error("Free generation is no longer available.");
+
   if (job.stage === "queued") {
     if (!await claimStage(job.id, "queued", "generating_after_frame")) return;
     const firstFrame = await resolveInputFrame(admin, job.first_frame_path, job.first_frame_url);

@@ -17,7 +17,7 @@ type ReservationRow = {
 export async function reserveGenerationCredit(input: { jobId: string; userId?: string; anonymousId?: string }) {
   const admin = getSupabaseAdmin();
   if (!admin) throw new Error("Supabase is required for credit reservations.");
-  const result = await admin.rpc("reserve_generation_credit", {
+  const result = await admin.rpc("reserve_paid_generation_credit", {
     p_job_id: input.jobId,
     p_user_id: input.userId ?? null,
     p_anonymous_id: input.anonymousId ?? null,

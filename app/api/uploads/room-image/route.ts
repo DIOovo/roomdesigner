@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { ANONYMOUS_COOKIE, anonymousStorageId, createAnonymousIdentity, readAnonymousIdentity } from "@/lib/auth/anonymous";
 import { createInputUpload, signUploadedInput } from "@/lib/assets/frame-assets";
 import { validateRoomImageMetadata } from "@/lib/assets/input-upload-validation";
-import { readAnonymousUsage } from "@/lib/credits/anonymous";
+
 import { getUserEntitlements } from "@/lib/entitlements/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { getSupabaseServer } from "@/lib/supabase/server";
@@ -51,8 +51,8 @@ async function getUploadOwner({ createAnonymous }: { createAnonymous: boolean })
   const serverClient = await getSupabaseServer();
   const user = serverClient ? (await serverClient.auth.getUser()).data.user : null;
   const store = await cookies();
-  const anonymousCount = readAnonymousUsage(store.get("roomfacelift_free")?.value);
-  if (!user && anonymousCount >= 1) return { response: authRequired(), ownerId: null, anonymousToken: undefined };
+
+  if (!user) return { response: authRequired(), ownerId: null, anonymousToken: undefined };
   if (user && (await getUserEntitlements(user.id)).totalCreditsRemaining <= 0) return { response: upgradeRequired(), ownerId: null, anonymousToken: undefined };
   if (user) return { response: null, ownerId: user.id, anonymousToken: undefined };
 
@@ -73,6 +73,6 @@ async function readJson(request: Request) {
   }
 }
 
-function authRequired() { return NextResponse.json({ error: "Sign in to use your second free preview.", requiresAuth: true }, { status: 401 }); }
+function authRequired() { return NextResponse.json({ error: "Sign in and purchase credits to generate.", requiresAuth: true }, { status: 401 }); }
 function upgradeRequired() { return NextResponse.json({ error: "No generation credits remaining.", requiresUpgrade: true }, { status: 402 }); }
 function cookieOptions() { return { httpOnly: true, sameSite: "lax" as const, secure: process.env.NODE_ENV === "production", maxAge: 60 * 60 * 24 * 365, path: "/" }; }
