@@ -9,8 +9,8 @@ const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
 test("homepage keeps the target metadata and exactly one H1", async () => {
   const source = await read("app/page.tsx");
-  assert.match(source, /Free AI Room Design Generator \(No Login\) - Before After Video/);
-  assert.match(source, /Free AI Room Design Generator/);
+  assert.match(source, /AI Room Design Generator - Before After Video/);
+  assert.match(source, /AI Room Design Generator/);
   assert.equal((source.match(/<h1\b/g) ?? []).length, 1);
   assert.match(source, /path: "\/"/);
 });

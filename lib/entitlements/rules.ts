@@ -17,13 +17,13 @@ export function calculateEntitlements(input: {
 }): UserEntitlements {
   const now = input.now ?? Date.now();
   if (!input.authenticated) {
-    const remaining = Math.max(0, Math.min(1, input.anonymousCreditsRemaining ?? 1));
+    const remaining = 0;
     return baseEntitlements(false, remaining, 0, 0, "free", null, null);
   }
 
   const validGrants = (input.grants ?? []).filter((grant) =>
     grant.credits_remaining > 0 && (!grant.expires_at || new Date(grant.expires_at).getTime() > now));
-  const free = sum(validGrants, "free");
+  const free = 0; // Legacy promotional balances are no longer spendable.
   const subscription = sum(validGrants, "subscription");
   const creditPack = sum(validGrants, "credit_pack") + sum(validGrants, "manual");
   const subscriptions = input.subscriptions ?? [];

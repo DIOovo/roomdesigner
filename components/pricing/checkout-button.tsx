@@ -98,11 +98,11 @@ export function CheckoutButton({ plan, children, featured = false }: { plan: "st
             <h2 id={titleId} className="mt-3 text-3xl leading-tight">Payments are opening soon</h2>
             <div id={descriptionId} className="mt-5 space-y-3 text-[15px] leading-7 text-[var(--muted)]">
               <p>We&apos;re finishing our payment setup. Starter, Pro, and Credit Pack purchases will be available shortly.</p>
-              <p>You can continue using RoomFacelift&apos;s free preview in the meantime.</p>
+              <p>New purchases are temporarily unavailable. Existing paid credits can still be used.</p>
             </div>
             <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
               <button type="button" onClick={() => setAvailabilityOpen(false)} className="focus-ring min-h-11 rounded-lg border border-[var(--line)] px-5 text-sm font-semibold hover:border-[var(--muted)]">Close</button>
-              <button type="button" onClick={tryFree} className="focus-ring min-h-11 rounded-lg bg-[var(--accent)] px-5 text-sm font-semibold text-[var(--on-accent)] shadow-[0_8px_20px_rgba(18,75,55,.16)] hover:bg-[var(--accent-strong)]">Try free</button>
+              <button type="button" onClick={tryFree} className="focus-ring min-h-11 rounded-lg bg-[var(--accent)] px-5 text-sm font-semibold text-[var(--on-accent)] shadow-[0_8px_20px_rgba(18,75,55,.16)] hover:bg-[var(--accent-strong)]">View generator</button>
             </div>
           </div>
         </div>,

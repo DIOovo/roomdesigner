@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Briefcase, Buildings, Check, FilmSlate, HouseLine, ImageSquare, Play, Sparkle, UploadSimple } from "@phosphor-icons/react/dist/ssr";
+import { Briefcase, Buildings, Check, FilmSlate, HouseLine, ImageSquare, Play, Sparkle, UploadSimple } from "@phosphor-icons/react/dist/ssr";
 import { RoomGenerator } from "@/components/generator/room-generator";
 import { ComparisonSlider } from "@/components/examples/comparison-slider";
 import { CheckoutButton } from "@/components/pricing/checkout-button";
@@ -9,15 +9,14 @@ import { publicPageMetadata } from "@/lib/seo";
 import { faqs, howToSteps } from "@/lib/site";
 
 export const metadata = publicPageMetadata({
-  title: "Free AI Room Design Generator (No Login) - Before After Video",
-  description: "Upload a room photo and create a smooth AI before and after redesign video. Your first 5-second preview is free with no login required.",
+  title: "AI Room Design Generator - Before After Video",
+  description: "Upload a room photo and create a smooth AI before and after redesign video. Sign in and purchase credits to generate a 5-second video.",
   path: "/",
 });
 
-type Plan = { name: "Free" | "Starter" | "Pro" | "Credit Pack"; price: string; note: string; features: readonly string[]; featured?: boolean };
+type Plan = { name: "Starter" | "Pro" | "Credit Pack"; price: string; note: string; features: readonly string[]; featured?: boolean };
 
 const plans: readonly Plan[] = [
-  { name: "Free", price: "$0", note: "Two previews, first without login", features: ["2 total previews", "5-second video", "480p with watermark", "Personal use only"] },
   { name: "Starter", price: "$9.99", note: "per month", features: ["20 videos per month", "5-second HD video", "No watermark", "Personal use only"] },
   { name: "Pro", price: "$24.99", note: "per month", features: ["60 videos per month", "5-second HD video", "No watermark", "Commercial license", "Priority queue"], featured: true },
   { name: "Credit Pack", price: "$19.99", note: "one-time", features: ["30 video credits", "5-second HD video", "Valid for one year", "No subscription"] },
@@ -32,7 +31,7 @@ export default function HomePage() {
           <div>
             <p className="mb-3 text-sm font-semibold tracking-[.01em] text-[var(--accent)]">Photo in. Transformation video out.</p>
             <h1 className="max-w-5xl text-[clamp(2.35rem,4.2vw,4.5rem)] leading-[.98]">
-              Free AI Room Design Generator <span className="text-[var(--muted)]">— Before &amp; After Video</span>
+              AI Room Design Generator <span className="text-[var(--muted)]">— Before &amp; After Video</span>
             </h1>
           </div>
           <p className="hidden max-w-sm text-sm font-medium leading-6 text-[var(--muted)] sm:block lg:pb-1">
@@ -41,7 +40,7 @@ export default function HomePage() {
         </div>
         <div className="hero-enter-delay"><RoomGenerator /></div>
         <p className="mt-3 max-w-4xl text-sm leading-6 text-[var(--muted)]">
-          Try AI room design from a photo with no login for your first preview. Free previews are limited and include a watermark.
+          Generate a room design video from your photo. An account and purchased credits are required.
         </p>
       </section>
 
@@ -99,7 +98,7 @@ export default function HomePage() {
       </section>
 
       <section id="pricing" className="shell py-20 md:py-28">
-        <div className="max-w-2xl"><h2 className="text-4xl md:text-6xl">Start free. Pay when the work gets serious.</h2><p className="mt-5 text-lg leading-8 text-[var(--muted)]">Every real generation is five seconds. Commercial rights are reserved for Pro.</p></div>
+        <div className="max-w-2xl"><h2 className="text-4xl md:text-6xl">Choose credits for your next redesign.</h2><p className="mt-5 text-lg leading-8 text-[var(--muted)]">Every real generation is five seconds. Commercial rights are reserved for Pro.</p></div>
         <div className="mt-12 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {plans.map((plan) => (
             <article key={plan.name} className={`surface relative flex flex-col p-6 ${plan.featured ? "soft-shadow border-[var(--accent)] lg:-translate-y-4" : ""}`}>
@@ -111,7 +110,7 @@ export default function HomePage() {
                 {plan.features.map((feature) => <li key={feature} className="flex items-start gap-2"><Check size={17} weight="bold" className="mt-0.5 shrink-0 text-[var(--accent)]" />{feature}</li>)}
               </ul>
               <div className="mt-auto">
-                {plan.name === "Free" ? <Link href="#generator" className="focus-ring mt-7 flex w-full items-center justify-center gap-2 rounded-lg border border-[var(--line)] bg-[var(--surface-2)] px-4 py-3 text-sm font-black hover:border-[var(--accent)]">Try free <ArrowRight size={16} weight="bold" /></Link> : <CheckoutButton plan={plan.name === "Starter" ? "starter" : plan.name === "Pro" ? "pro" : "credits"} featured={plan.featured}>Choose plan</CheckoutButton>}
+                {<CheckoutButton plan={plan.name === "Starter" ? "starter" : plan.name === "Pro" ? "pro" : "credits"} featured={plan.featured}>Choose plan</CheckoutButton>}
               </div>
             </article>
           ))}
@@ -122,7 +121,7 @@ export default function HomePage() {
 
       <section className="border-y border-[var(--line)] bg-[color:var(--surface)]/35 py-20 md:py-28">
         <div className="shell grid gap-10 lg:grid-cols-[.7fr_1.3fr]">
-          <div><h2 className="text-4xl md:text-5xl">Questions before you redesign?</h2><p className="mt-5 max-w-md leading-7 text-[var(--muted)]">Straight answers about free previews, no-login use, photo quality, and professional licensing.</p></div>
+          <div><h2 className="text-4xl md:text-5xl">Questions before you redesign?</h2><p className="mt-5 max-w-md leading-7 text-[var(--muted)]">Straight answers about credits, account access, photo quality, and professional licensing.</p></div>
           <div className="grid gap-3">
             {faqs.map((faq) => (
               <details key={faq.question} className="group surface p-5 open:bg-[var(--surface-2)]">

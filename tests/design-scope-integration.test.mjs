@@ -73,11 +73,11 @@ test("mock and remote After Image providers remain compatible without replacing 
   assert.doesNotMatch(remote, /buildRoomRedesignPrompt|input\.prompt\s*=/);
 });
 
-test("new jobs persist design_scope and stateless jobs snapshot it", () => {
+test("new paid jobs persist design_scope and no stateless preview bypass remains", () => {
   const create = source("app/api/generate/route.ts");
   assert.match(create, /parseRequestedDesignScope\(body\.scope\)/);
   assert.match(create, /design_scope: designScope/);
-  assert.match(create, /designScope: input\.designScope/);
+  assert.doesNotMatch(create, /createStatelessMockJob|createMockJobToken/);
   assert.match(create, /Choose a valid design scope\./);
 });
 

@@ -12,7 +12,7 @@ test("payment availability is fail-closed unless the flag is exactly true", () =
   assert.equal(isPaymentsLive("true"), true);
 });
 
-test("all paid plan buttons share the availability modal and free remains a generator link", async () => {
+test("paid plan buttons preserve the payment availability gate", async () => {
   const [button, homepage, pricing] = await Promise.all([
     read("components/pricing/checkout-button.tsx"),
     read("app/page.tsx"),
@@ -35,7 +35,7 @@ test("all paid plan buttons share the availability modal and free remains a gene
   assert.match(homepage, /<CheckoutButton/);
   assert.match(homepage, /plan=\{plan\.name === "Starter" \? "starter" : plan\.name === "Pro" \? "pro" : "credits"\}/);
   assert.match(homepage, />Choose plan<\/CheckoutButton>/);
-  assert.match(homepage, /href="#generator"/);
+  assert.doesNotMatch(homepage, /name: "Free"|Try free/);
   for (const plan of ['"starter"', '"pro"', '"credits"']) assert.match(pricing, new RegExp(`plan: ${plan}`));
   assert.match(pricing, /href="\/#generator"/);
 });

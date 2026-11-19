@@ -19,7 +19,7 @@ export const siteConfig = {
   supportEmail: "support@roomfacelift.com",
   socialImagePath: "/og-image.png",
   description:
-    "Turn one room photo into a smooth AI before and after redesign video. Your first preview is free and works without login.",
+    "Turn one room photo into a smooth AI before and after redesign video. Sign in and purchase credits to generate your video.",
 };
 
 export const howToSteps = [
@@ -69,12 +69,12 @@ export const faqs = [
   {
     question: "Is RoomFacelift AI room design free?",
     answer:
-      "Yes. Your first 5-second 480p preview is available free without an account. After you sign in, you can claim one more limited free preview. Free videos include a RoomFacelift watermark and the allowance does not reset daily.",
+      "No. Generation requires a signed-in account and purchased credits. Free previews and signup credits are no longer offered.",
   },
   {
     question: "Can I use AI room design without login?",
     answer:
-      "You can create your first preview without an account. We ask you to sign in before the second generation to protect the free service from automated abuse.",
+      "Browse examples without login. Sign in and purchase credits to generate.",
   },
   {
     question: "Can I redesign a room from a photo?",
@@ -139,8 +139,8 @@ export function buildStructuredData() {
       applicationCategory: "DesignApplication",
       operatingSystem: "Web",
       description: siteConfig.description,
-      offers: { "@type": "Offer", price: "0", priceCurrency: "USD", description: "Limited first preview", url: `${siteConfig.url}/#pricing` },
-      featureList: ["AI room design from a photo", "Before and after transformation video", "No-login first preview"],
+      offers: { "@type": "Offer", price: "9.99", priceCurrency: "USD", description: "Starter subscription", url: `${siteConfig.url}/#pricing` },
+      featureList: ["AI room design from a photo", "Before and after transformation video", "Account-based paid generation"],
     },
     {
       "@context": "https://schema.org",

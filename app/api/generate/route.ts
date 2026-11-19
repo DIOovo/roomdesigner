@@ -8,8 +8,7 @@ import { readAnonymousUsage } from "@/lib/credits/anonymous";
 import { releaseGenerationCredit, reserveGenerationCredit } from "@/lib/credits/reservations";
 import { assertGenerationConfiguration, GenerationConfigurationError } from "@/lib/config/generation";
 import { getUserEntitlements } from "@/lib/entitlements/server";
-import { createMockJobToken, MOCK_JOB_COOKIE } from "@/lib/generation/mock-job";
-import { parseRequestedDesignScope, type DesignScope } from "@/lib/generation/design-scope";
+import { parseRequestedDesignScope } from "@/lib/generation/design-scope";
 import { getJobByRequestKey } from "@/lib/generation/repository";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { getSupabaseServer } from "@/lib/supabase/server";
@@ -35,7 +34,7 @@ export async function POST(request: Request) {
     const user = serverClient ? (await serverClient.auth.getUser()).data.user : null;
     const store = await cookies();
     const anonymousCount = readAnonymousUsage(store.get("roomfacelift_free")?.value);
-    if (!user && anonymousCount >= 1) return authRequired();
+    if (!user) return authRequired();
 
     let anonymousToken = store.get(ANONYMOUS_COOKIE)?.value;
     let anonymousIdentity = readAnonymousIdentity(anonymousToken);
@@ -51,11 +50,7 @@ export async function POST(request: Request) {
     assertGenerationConfiguration();
     const admin = getSupabaseAdmin();
 
-    if (!admin) {
-      if (!isMock) return NextResponse.json({ error: "Supabase must be configured before real generation can start." }, { status: 503 });
-      if (!imageUrl.startsWith("/samples/")) return NextResponse.json({ error: "Photo uploads require Supabase Storage." }, { status: 503 });
-      return createStatelessMockJob({ roomType, style, designScope, imageUrl, anonymousToken });
-    }
+    if (!admin) return NextResponse.json({ error: "Generation is temporarily unavailable." }, { status: 503 });
 
     const existing = await getJobByRequestKey(requestKey);
     if (existing) return NextResponse.json({ jobId: existing.id, status: existing.status, stage: existing.stage, creditSource: existing.credit_source });
@@ -122,16 +117,8 @@ export async function POST(request: Request) {
   }
 }
 
-function createStatelessMockJob(input: { roomType: string; style: string; designScope: DesignScope; imageUrl: string; anonymousToken?: string }) {
-  const jobId = crypto.randomUUID();
-  const firstFrame = input.imageUrl || "/samples/living-before.jpg";
-  const response = NextResponse.json({ jobId, status: "queued", stage: "queued", creditSource: "free", plan: "free" }, { status: 202 });
-  response.cookies.set(MOCK_JOB_COOKIE, createMockJobToken({ id: jobId, createdAt: Date.now(), roomType: input.roomType, style: input.style, designScope: input.designScope, firstFrame, lastFrame: mockAfterPath(input.roomType) }), cookieOptions(60 * 30));
-  if (input.anonymousToken) response.cookies.set(ANONYMOUS_COOKIE, input.anonymousToken, cookieOptions(60 * 60 * 24 * 365));
-  return response;
-}
 
-function authRequired() { return NextResponse.json({ error: "Sign in to use your second free preview.", requiresAuth: true }, { status: 401 }); }
+function authRequired() { return NextResponse.json({ error: "Sign in and purchase credits to generate.", requiresAuth: true }, { status: 401 }); }
 function upgradeRequired() { return NextResponse.json({ error: "No generation credits remaining.", requiresUpgrade: true }, { status: 402 }); }
 
 function validateInput(imageUrl: string, requestId: string) {
@@ -141,12 +128,5 @@ function validateInput(imageUrl: string, requestId: string) {
   return null;
 }
 
-function mockAfterPath(roomType: string) {
-  const room = roomType.toLowerCase();
-  if (room.includes("bed")) return "/samples/bedroom-after.jpg";
-  if (room.includes("kitchen")) return "/samples/kitchen-after.jpg";
-  if (room.includes("office") || room.includes("study")) return "/samples/office-after.jpg";
-  return "/samples/living-after.jpg";
-}
 
 function cookieOptions(maxAge: number) { return { httpOnly: true, sameSite: "lax" as const, secure: process.env.NODE_ENV === "production", maxAge, path: "/" }; }
